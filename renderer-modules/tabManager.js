@@ -3,53 +3,56 @@ let tabs = [];
 let currentTabIndex = -1;
 
 function createNewTab(ensureInputCell) {
-  const notebookEl = document.createElement('div');
-  notebookEl.className = 'notebook';
-  notebookEl.innerHTML = '';
-  const container = document.getElementById('notebookContainer');
+  const notebookEl = document.createElement("div");
+  notebookEl.className = "notebook";
+  notebookEl.innerHTML = "";
+  const container = document.getElementById("notebookContainer");
   container.appendChild(notebookEl);
-  
-  const tabBar = document.getElementById('tabBar');
-  const tabButton = document.createElement('button');
-  tabButton.className = 'px-3 py-1 text-lg border border-green-500 rounded hover:bg-green-500 hover:text-black focus:outline-none';
-  const title = tabs.length === 0 ? 'Tab1' : 'New Tab';
+
+  const tabBar = document.getElementById("tabBar");
+  const tabButton = document.createElement("button");
+  tabButton.className = "px-3 py-1 text-lg border border-green-500 rounded hover:bg-green-500 hover:text-black focus:outline-none";
+  const title = tabs.length === 0 ? "Tab1" : "New Tab";
   tabButton.textContent = title;
   tabBar.appendChild(tabButton);
-  
+
   const tab = {
     id: Date.now(),
     title,
     notebookEl,
-    tabButton
+    tabButton,
   };
   tabs.push(tab);
-  
-  tabButton.addEventListener('click', () => {
-    const index = tabs.findIndex(t => t.id === tab.id);
+
+  tabButton.addEventListener("click", () => {
+    const index = tabs.findIndex((t) => t.id === tab.id);
     switchTabTo(index);
   });
-  
+
   switchTabTo(tabs.length - 1);
-  
+
   // Ensure a single input cell is created for this notebook.
   ensureInputCell(notebookEl);
 }
 
 function switchTabTo(newIndex) {
   if (newIndex < 0 || newIndex >= tabs.length) return;
-  tabs.forEach(tab => {
-    tab.notebookEl.style.display = 'none';
-    tab.tabButton.classList.remove('bg-green-500','text-black');
+  tabs.forEach((tab) => {
+    tab.notebookEl.style.display = "none";
+    tab.tabButton.classList.remove("bg-green-500", "text-black");
   });
   currentTabIndex = newIndex;
-  tabs[newIndex].notebookEl.style.display = 'block';
-  tabs[newIndex].tabButton.classList.add('bg-green-500','text-black');
-  
+  tabs[newIndex].notebookEl.style.display = "block";
+  tabs[newIndex].tabButton.classList.add("bg-green-500", "text-black");
+
   // Ensure the input area is focused.
-  const inputCell = tabs[newIndex].notebookEl.querySelector('.input-cell');
+  const inputCell = tabs[newIndex].notebookEl.querySelector(".input-cell");
   if (inputCell) {
-    const txt = inputCell.querySelector('textarea');
-    if (txt) setTimeout(() => { txt.focus(); }, 50);
+    const txt = inputCell.querySelector("textarea");
+    if (txt)
+      setTimeout(() => {
+        txt.focus();
+      }, 50);
   }
 }
 
@@ -76,13 +79,16 @@ function closeCurrentTab() {
 function refreshCurrentTab(ensureInputCell) {
   if (currentTabIndex < 0) return;
   const tab = tabs[currentTabIndex];
-  tab.notebookEl.innerHTML = '';
+  tab.notebookEl.innerHTML = "";
   // Create a new input cell.
   ensureInputCell(tab.notebookEl);
-  const inputCell = tab.notebookEl.querySelector('.input-cell');
+  const inputCell = tab.notebookEl.querySelector(".input-cell");
   if (inputCell) {
-    const txt = inputCell.querySelector('textarea');
-    if (txt) setTimeout(() => { txt.focus(); }, 50);
+    const txt = inputCell.querySelector("textarea");
+    if (txt)
+      setTimeout(() => {
+        txt.focus();
+      }, 50);
   }
 }
 
@@ -102,6 +108,5 @@ module.exports = {
   closeCurrentTab,
   refreshCurrentTab,
   updateTabTitle,
-  getCurrentTab
+  getCurrentTab,
 };
-

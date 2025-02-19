@@ -51,7 +51,7 @@ function runAsciiIntro() {
   `; // .trim() removes the extra newline at the start/end
 
   // Split the string into an array of lines using newline characters.
-  const asciiArt = asciiArtString.split('\n');
+  const asciiArt = asciiArtString.split("\n");
 
   // Create a full-screen container for the ASCII art.
   const artContainer = document.createElement("div");
@@ -105,4 +105,3 @@ function runAsciiIntro() {
 }
 
 module.exports = { runAsciiIntro };
-
