@@ -1,5 +1,7 @@
 
 
+    npm run make; sudo dpkg -i /home/rgw/Apps/datasling/out/make/deb/x64/datasling_1.0.0_amd64.deb
+
 
     @preset::<PRESET_1_NAME>
     select top 10 * from t1;
