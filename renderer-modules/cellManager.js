@@ -206,15 +206,14 @@ function ensureSingleInputCell(notebookEl) {
     });
     textarea.addEventListener("scroll", () => {
       lineNumbers.scrollTop = textarea.scrollTop;
-    });
+    }); // When Ctrl+Enter is pressed, process and execute queries.
 
-    // When Ctrl+Enter is pressed, process and execute queries.
     textarea.addEventListener("keydown", async (e) => {
       if (e.key === "Enter" && e.ctrlKey) {
         e.preventDefault();
         const queryText = textarea.value.trim();
-        if (!queryText) return;
-
+        if (!queryText) return; // Reset preset so that if no directive is provided, the default is used.
+        currentPreset = null;
         if (queryText.indexOf(";") !== -1) {
           const queries = queryText
             .split(";")
@@ -222,11 +221,9 @@ function ensureSingleInputCell(notebookEl) {
             .filter((q) => q.length);
           for (const query of queries) {
             if (query.startsWith("@preset::")) {
-              let lines = query.split("\n");
-              // Extract preset.
+              let lines = query.split("\n"); // Extract preset (only the first line).
               currentPreset = lines[0].replace("@preset::", "").trim();
-              console.log(`Preset updated to "${currentPreset}"`);
-              // Execute any additional query text on the same segment.
+              console.log(`Preset updated to "${currentPreset}"`); // If additional query text appears on the same segment, execute it.
               if (lines.length > 1) {
                 let remainingQuery = lines.slice(1).join("\n").trim();
                 if (remainingQuery.length) {
@@ -238,38 +235,34 @@ function ensureSingleInputCell(notebookEl) {
             await runQuery(inputCell, query);
           }
         } else {
-          // Newline-based segmentation
+          // Newline-based segmentation.
           const lines = queryText.split("\n");
           let segment = "";
           for (const line of lines) {
-            const trimmedLine = line.trim();
-            // If the line is a preset directive…
+            const trimmedLine = line.trim(); // If the line is a preset directive…
             if (trimmedLine.startsWith("@preset::")) {
-              // If there's an accumulated query before switching preset, execute it.
+              // Execute any pending query before switching preset.
               if (segment.trim() !== "") {
                 await runQuery(inputCell, segment.trim());
                 segment = "";
-              }
-              // Update currentPreset—extract only the preset name.
+              } // Update currentPreset with the new value.
               currentPreset = trimmedLine.replace("@preset::", "").split("\n")[0].trim();
               console.log(`Preset updated to "${currentPreset}"`);
             } else if (trimmedLine === "") {
-              // Blank line indicates the end of a query segment.
+              // A blank line marks the end of a segment.
               if (segment.trim() !== "") {
                 await runQuery(inputCell, segment.trim());
                 segment = "";
               }
             } else {
-              // Add non-blank lines to the current query segment.
+              // Append non-blank, non-directive lines.
               segment += " " + trimmedLine;
             }
-          }
-          // If any query is left after processing all the lines, run it.
+          } // Execute remaining query segment, if any.
           if (segment.trim() !== "") {
             await runQuery(inputCell, segment.trim());
           }
         }
-
         autoResize();
       }
     });
