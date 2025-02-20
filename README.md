@@ -1,7 +1,30 @@
+# Datasling
 
+A minimalistic SQL-querying GUI tool, sans inherent ugliness of commercial software.
 
-    npm run make; sudo dpkg -i /home/rgw/Apps/datasling/out/make/deb/x64/datasling_1.0.0_amd64.deb
+## 1. Prerequisites
 
+- Ubuntu 24.04 LTS
+
+## 2. Installation
+
+    curl -fsSL https://files.ryangerardwilson.com/datasling/debian/pubkey.gpg | sudo gpg --dearmor -o /usr/share/keyrings/datasling.gpg
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/datasling.gpg] https://files.ryangerardwilson.com/datasling/debian stable main" | sudo tee /etc/apt/sources.list.d/datasling.list
+    sudo apt update
+    sudo apt-get install datasling
+
+## 3. Subsequent Updates
+
+    sudo apt update
+    sudo apt install --only-upgrade datasling
+
+## 4. Usage
+
+Simply run the below command.
+
+    datasling
+
+Then query your databases.
 
     @preset::<PRESET_1_NAME>
     select top 10 * from t1;
@@ -16,4 +39,9 @@
     select top 10 * from t5;
 
     select top 10 * from t6;
+
+## 5. License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 

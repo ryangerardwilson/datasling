@@ -1,6 +1,6 @@
 {
   "name": "datasling",
-  "version": "1.0.0",
+  "version": "0.0.3-1",
   "description": "A desktop application for managing MSSQL queries and presets",
   "main": "main.js",
   "scripts": {
@@ -9,7 +9,7 @@
   },
   "keywords": [],
   "author": "Ryan Gerard Wilson <ryangerardwilson@gmail.com>",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@electron/remote": "^2.1.2",
     "mssql": "^11.0.1",

@@ -3,4 +3,6 @@ out/
 logs/
 *.log
 *.swp
-
+debian/version_build_folders/*
+debian/version_debs/*
+debian/dists/*
