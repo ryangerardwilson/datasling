@@ -12,6 +12,8 @@ A minimalistic SQL-querying GUI tool, sans inherent ugliness of commercial softw
     echo "deb [arch=amd64 signed-by=/usr/share/keyrings/datasling.gpg] https://files.ryangerardwilson.com/datasling/debian stable main" | sudo tee /etc/apt/sources.list.d/datasling.list
     sudo apt update
     sudo apt-get install datasling
+    sudo chown root:root /usr/lib/datasling/chrome-sandbox
+    sudo chmod 4755 /usr/lib/datasling/chrome-sandbox
 
 ## 3. Subsequent Updates
 

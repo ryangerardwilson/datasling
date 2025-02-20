@@ -6,6 +6,7 @@ const path = require("path");
 const sql = require("mssql");
 const fs = require("fs");
 const os = require("os");
+const { execSync } = require("child_process");
 
 // Load presets from ~/.rgwfuncsrc
 let appPresets = {};
@@ -72,16 +73,13 @@ app.on("activate", () => {
 
 // IPC handler to return available MSSQL presets
 ipcMain.handle("get-mssql-presets", () => {
-  // Return only the names of presets that are for MSSQL
   return (appPresets.db_presets || []).filter((p) => p.db_type === "mssql").map((p) => p.name);
 });
 
 // IPC handler to execute a query against the database.
 ipcMain.handle("database-query", async (event, { query, preset }) => {
-  // Determine which configuration to use.
   let configToUse;
   if (preset) {
-    // Find a matching MSSQL preset.
     const found = (appPresets.db_presets || []).find((p) => p.name === preset && p.db_type === "mssql");
     if (!found) {
       throw new Error(`Preset "${preset}" not found or not an MSSQL preset.`);
@@ -98,7 +96,6 @@ ipcMain.handle("database-query", async (event, { query, preset }) => {
     };
     console.log(`Running query using preset "${preset}"`);
   } else {
-    // If no preset is specified, use the default MSSQL preset if available.
     if (defaultPreset) {
       configToUse = {
         user: defaultPreset.username,
@@ -117,14 +114,10 @@ ipcMain.handle("database-query", async (event, { query, preset }) => {
   }
 
   try {
-    // Connect and execute the query.
     await sql.connect(configToUse);
     console.log("Connected to MSSQL.");
     const result = await sql.query(query);
-    // Close the connection. (For production, consider using a connection pool.)
     sql.close();
-
-    // Extract plain column definitions if available.
     const plainColumns = {};
     if (result.recordset[0] && result.recordset.columns) {
       for (const colName in result.recordset.columns) {
@@ -140,3 +133,4 @@ ipcMain.handle("database-query", async (event, { query, preset }) => {
     throw err;
   }
 });
+
