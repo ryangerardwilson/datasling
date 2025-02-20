@@ -133,4 +133,3 @@ ipcMain.handle("database-query", async (event, { query, preset }) => {
     throw err;
   }
 });
-
