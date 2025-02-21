@@ -1,10 +1,13 @@
 /* lib/renderer/cellManager.js */
 const { ipcRenderer } = require("electron");
-const { displayResults, downloadCSV, toggleColumn, setColumnState } = require("./resultsDisplay.js");
+const { displayResults, downloadODF, toggleColumn, setColumnState } = require("./resultsDisplay.js");
 const { updateTabTitle } = require("./tabManager.js");
 const { expandIcon, contractIcon } = require("./icons.js");
 
 let currentPreset = null;
+
+// Define supported database types locally
+const supportedDbTypes = ["mssql", "mysql"]; // Add more as needed (e.g., "bigquery", "athena")
 
 const generateTimestamp = () => {
   const now = new Date();
@@ -36,11 +39,13 @@ const replacePresetDirective = (textarea, preset) => {
 };
 
 const showPresetDropdown = (presets, callback, textarea) => {
+  console.log("[DEBUG] showPresetDropdown called with presets:", presets);
   let dropdown = document.getElementById("presetDropdown");
   if (!dropdown) {
     dropdown = document.createElement("div");
     dropdown.id = "presetDropdown";
-    dropdown.className = "absolute bg-transparent rounded shadow-lg z-50";
+    // The dropdown container uses Tailwind's bg-black/50.
+    dropdown.className = "absolute bg-black/60 rounded shadow-lg z-50";
     document.body.appendChild(dropdown);
   }
 
@@ -48,60 +53,82 @@ const showPresetDropdown = (presets, callback, textarea) => {
   dropdown.style.left = `${rect.left}px`;
   dropdown.style.top = `${rect.bottom}px`;
   dropdown.style.width = `${rect.width}px`;
+  console.log("[DEBUG] Dropdown positioned at:", { left: rect.left, top: rect.bottom, width: rect.width });
 
   dropdown.innerHTML = "";
-  let selectedIndex = 0;
-  presets.forEach((preset, index) => {
-    const item = document.createElement("div");
-    item.className = "preset-item px-2 py-1 cursor-pointer text-green-500 hover:bg-gray-200";
-    item.textContent = preset;
-    item.dataset.index = index;
-    item.addEventListener("click", () => {
-      callback(preset);
-      replacePresetDirective(textarea, preset);
-      dropdown.style.display = "none";
-      textarea.removeEventListener("keydown", keyHandler);
+  if (presets.length === 0) {
+    console.log("[DEBUG] No presets to display in dropdown");
+    const noItems = document.createElement("div");
+    noItems.className = "px-2 py-1 text-gray-500";
+    noItems.textContent = "No compatible presets found";
+    dropdown.appendChild(noItems);
+  } else {
+    let selectedIndex = 0;
+    presets.forEach((preset, index) => {
+      const item = document.createElement("div");
+      // preset-item styling. Default text color is green-500.
+      item.className = "preset-item px-2 py-1 cursor-pointer text-green-500";
+      item.textContent = preset;
+      item.dataset.index = index;
+      item.addEventListener("click", () => {
+        console.log("[DEBUG] Preset clicked:", preset);
+        callback(preset);
+        replacePresetDirective(textarea, preset);
+        dropdown.style.display = "none";
+        textarea.removeEventListener("keydown", keyHandler);
+      });
+      dropdown.appendChild(item);
     });
-    dropdown.appendChild(item);
-  });
 
-  const updateHighlight = () => {
-    const items = dropdown.querySelectorAll(".preset-item");
-    items.forEach((item, idx) => {
-      item.classList.toggle("bg-gray-800", idx === selectedIndex);
-      item.classList.toggle("bg-opacity-30", idx === selectedIndex);
-    });
-  };
-  updateHighlight();
+    const updateHighlight = () => {
+      const items = dropdown.querySelectorAll(".preset-item");
+      items.forEach((item, idx) => {
+        if (idx === selectedIndex) {
+          // When selected, apply a darker bg and update text to green-200.
+          item.classList.add("bg-black/80");
+          item.classList.remove("text-green-500");
+          item.classList.add("text-green-200");
+        } else {
+          item.classList.remove("bg-black/80");
+          item.classList.remove("text-green-200");
+          item.classList.add("text-green-500");
+        }
+      });
+    };
+    updateHighlight();
 
-  const keyHandler = (e) => {
-    if (dropdown.style.display !== "block") return;
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      selectedIndex = (selectedIndex + 1) % presets.length;
-      updateHighlight();
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      selectedIndex = (selectedIndex - 1 + presets.length) % presets.length;
-      updateHighlight();
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      const selectedPreset = presets[selectedIndex];
-      callback(selectedPreset);
-      replacePresetDirective(textarea, selectedPreset);
-      dropdown.style.display = "none";
-      textarea.removeEventListener("keydown", keyHandler);
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      dropdown.style.display = "none";
-      textarea.removeEventListener("keydown", keyHandler);
-    }
-  };
+    const keyHandler = (e) => {
+      if (dropdown.style.display !== "block") return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        selectedIndex = (selectedIndex + 1) % presets.length;
+        updateHighlight();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        selectedIndex = (selectedIndex - 1 + presets.length) % presets.length;
+        updateHighlight();
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        const selectedPreset = presets[selectedIndex];
+        console.log("[DEBUG] Preset selected via Enter:", selectedPreset);
+        callback(selectedPreset);
+        replacePresetDirective(textarea, selectedPreset);
+        dropdown.style.display = "none";
+        textarea.removeEventListener("keydown", keyHandler);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        console.log("[DEBUG] Dropdown closed via Escape");
+        dropdown.style.display = "none";
+        textarea.removeEventListener("keydown", keyHandler);
+      }
+    };
 
-  textarea.removeEventListener("keydown", dropdown._keyHandler || (() => {}));
-  textarea.addEventListener("keydown", keyHandler);
-  dropdown._keyHandler = keyHandler;
+    textarea.removeEventListener("keydown", dropdown._keyHandler || (() => {}));
+    textarea.addEventListener("keydown", keyHandler);
+    dropdown._keyHandler = keyHandler;
+  }
 
+  console.log("[DEBUG] Dropdown should be visible now");
   dropdown.style.display = "block";
 };
 
@@ -133,29 +160,42 @@ const ensureSingleInputCell = (notebookEl) => {
       lineNumbers.style.height = `${newHeight}px`;
     };
 
-    textarea.addEventListener("input", () => {
+    textarea.addEventListener("input", async () => {
       autoResize();
       const lines = textarea.value.split("\n").length;
       lineNumbers.textContent = Array.from({ length: lines }, (_, i) => i + 1).join("\n");
 
       const currentLine = getCurrentLine(textarea);
+      console.log("[DEBUG] Current line:", currentLine);
       if (currentLine === "@preset::") {
-        ipcRenderer
-          .invoke("get-presets", "mssql")
-          .then((presets) => {
-            showPresetDropdown(
-              presets,
-              (selected) => {
-                currentPreset = selected;
-                console.log(`Preset selected: ${currentPreset}`);
-              },
-              textarea,
-            );
-          })
-          .catch((err) => console.error("Error getting presets:", err));
+        try {
+          const allPresets = await ipcRenderer.invoke("get-presets");
+          console.log("[DEBUG] All presets fetched:", allPresets);
+          const filteredPresets = allPresets
+            .filter((preset) => {
+              const isSupported = supportedDbTypes.includes(preset.db_type);
+              console.log(`[DEBUG] Checking preset ${preset.name}: db_type=${preset.db_type}, supported=${isSupported}`);
+              return isSupported;
+            })
+            .map((preset) => preset.name);
+          console.log("[DEBUG] Filtered presets:", filteredPresets);
+          showPresetDropdown(
+            filteredPresets,
+            (selected) => {
+              currentPreset = selected;
+              console.log(`Preset selected: ${currentPreset}`);
+            },
+            textarea,
+          );
+        } catch (err) {
+          console.error("Error loading presets:", err);
+        }
       } else {
         const dropdown = document.getElementById("presetDropdown");
-        if (dropdown) dropdown.style.display = "none";
+        if (dropdown) {
+          console.log("[DEBUG] Hiding dropdown");
+          dropdown.style.display = "none";
+        }
       }
     });
 
@@ -209,6 +249,9 @@ const ensureSingleInputCell = (notebookEl) => {
   return inputCell;
 };
 
+// This global will keep track of the last downloaded ODF file.
+let currentOdsFilePath = null;
+
 const runQuery = async (inputCell, query) => {
   const output = inputCell.querySelector(".output");
   const resultContainer = document.createElement("div");
@@ -234,26 +277,26 @@ const runQuery = async (inputCell, query) => {
     console.error("Database query failed:", err);
     if (status.parentNode === resultContainer) resultContainer.removeChild(status);
 
-    // Create a detailed error message
     const errorMsg = document.createElement("div");
     errorMsg.className = "text-xl text-red-500";
-    // Extract a user-friendly message from the error
     let errorText = "Unknown error occurred.";
     if (err.message) {
-      // Check for nested error details (e.g., from main process)
       const match = err.message.match(/MSSQL query failed: (.+)/) || err.message.match(/Error: (.+)/) || [, err.message];
       errorText = match[1] || "Unknown error.";
     }
     errorMsg.textContent = `Query failed: ${errorText}`;
     resultContainer.appendChild(errorMsg);
 
-    // Actions container
+    const errorDetails = document.createElement("div");
+    errorDetails.className = "text-sm text-red-300 mt-1";
+    errorDetails.textContent = "See console for full stack trace.";
+    resultContainer.appendChild(errorDetails);
+
     const actionsErr = document.createElement("div");
     actionsErr.className = "mt-2 space-x-2 text-xl flex action-buttons";
 
-    // Close button
     const closeErr = document.createElement("button");
-    closeErr.textContent = "{close}";
+    closeErr.textContent = "Close";
     closeErr.className = "text-green-500 hover:text-green-400";
     closeErr.addEventListener("click", () => resultContainer.remove());
     actionsErr.appendChild(closeErr);
@@ -264,17 +307,44 @@ const runQuery = async (inputCell, query) => {
 
   const actionsDiv = document.createElement("div");
   actionsDiv.className = "action-buttons mt-1 space-x-2 text-xl";
+
+  // Download button: downloads data as ODF (converting internally)
+  const downloadButton = document.createElement("button");
+  downloadButton.textContent = "{download}";
+  downloadButton.className = "text-green-500 hover:text-green-400";
+  downloadButton.addEventListener("click", async () => {
+    try {
+      await downloadODF(data);
+    } catch (err) {
+      console.error("Download ODF failed:", err);
+    }
+  });
+  actionsDiv.appendChild(downloadButton);
+
+  // Open button: simply opens the previously downloaded ODF file.
+  const openButton = document.createElement("button");
+  openButton.textContent = "{open}";
+  openButton.className = "text-green-500 hover:text-green-400";
+
+  openButton.addEventListener("click", async () => {
+    try {
+      // Always download (and convert) the data to ODF.
+      currentOdsFilePath = await downloadODF(data);
+      // Now open the newly converted ODS file.
+      await ipcRenderer.invoke("open-ods", currentOdsFilePath);
+    } catch (err) {
+      console.error("Failed to open ODS:", err);
+    }
+  });
+
+  actionsDiv.appendChild(openButton);
+
+  // Optional: a close result button.
   const closeButton = document.createElement("button");
   closeButton.textContent = "{close}";
   closeButton.className = "text-green-500 hover:text-green-400";
   closeButton.addEventListener("click", () => resultContainer.remove());
   actionsDiv.appendChild(closeButton);
-
-  const downloadButton = document.createElement("button");
-  downloadButton.textContent = "{downloadCSV}";
-  downloadButton.className = "text-green-500 hover:text-green-400";
-  downloadButton.addEventListener("click", () => downloadCSV(data));
-  actionsDiv.appendChild(downloadButton);
 
   resultContainer.appendChild(actionsDiv);
 };

@@ -104,56 +104,80 @@ function displayResults(data, container, icons) {
 }
 
 function downloadCSV(data) {
-  if (!data || !data.rows || data.rows.length === 0) return;
-
-  const rows = data.rows;
-  const headers = Object.keys(rows[0]);
-  let csvContent = headers.join(",") + "\n";
-
-  rows.forEach((row) => {
-    const rowData = headers.map((header) => {
-      let cell = row[header];
-      if (cell === null || cell === undefined) cell = "";
-      if (typeof cell === "string" && (cell.includes(",") || cell.includes('"'))) {
-        return '"' + cell.replace(/"/g, '""') + '"';
-      }
-      return cell;
-    });
-    csvContent += rowData.join(",") + "\n";
-  });
-
-  // Use Node's built-in modules and @electron/remote to get the downloads folder.
-  const fs = require("fs");
-  const path = require("path");
-  const { app, Notification } = require("@electron/remote");
-
-  // Get the user's Downloads folder path
-  const downloadsPath = app.getPath("downloads");
-
-  // Format the current timestamp in YYYYMMDDHHMMSS format.
-  const now = new Date();
-  const timestamp = now.getFullYear().toString() + (now.getMonth() + 1).toString().padStart(2, "0") + now.getDate().toString().padStart(2, "0") + now.getHours().toString().padStart(2, "0") + now.getMinutes().toString().padStart(2, "0") + now.getSeconds().toString().padStart(2, "0");
-
-  // Create the file name using the formatted timestamp.
-  const fileName = `query_download_${timestamp}.csv`;
-  const filePath = path.join(downloadsPath, fileName);
-
-  // Write the CSV content to the file.
-  fs.writeFile(filePath, csvContent, "utf8", (err) => {
-    if (err) {
-      console.error("Error writing CSV file:", err);
-      new Notification({
-        title: "Download Failed",
-        body: "There was an error writing the CSV file.",
-      }).show();
-    } else {
-      new Notification({
-        title: "Download Complete",
-        body: `CSV file has been saved to: ${filePath}`,
-      }).show();
+  return new Promise((resolve, reject) => {
+    if (!data || !data.rows || data.rows.length === 0) {
+      return reject("No data to download.");
     }
+
+    const rows = data.rows;
+    const headers = Object.keys(rows[0]);
+    let csvContent = headers.join(",") + "\n";
+
+    rows.forEach((row) => {
+      const rowData = headers.map((header) => {
+        let cell = row[header];
+        if (cell === null || cell === undefined) cell = "";
+        if (typeof cell === "string" && (cell.includes(",") || cell.includes('"'))) {
+          return '"' + cell.replace(/"/g, '""') + '"';
+        }
+        return cell;
+      });
+      csvContent += rowData.join(",") + "\n";
+    });
+
+    // Use Node's built-in modules and @electron/remote
+    const fs = require("fs");
+    const path = require("path");
+    const { app, Notification } = require("@electron/remote");
+
+    // Get the user's Downloads folder path
+    const downloadsPath = app.getPath("downloads");
+
+    // Get current timestamp in YYYYMMDDHHMMSS format.
+    const now = new Date();
+    const timestamp = now.getFullYear().toString() + (now.getMonth() + 1).toString().padStart(2, "0") + now.getDate().toString().padStart(2, "0") + now.getHours().toString().padStart(2, "0") + now.getMinutes().toString().padStart(2, "0") + now.getSeconds().toString().padStart(2, "0");
+
+    // Create the file name.
+    const fileName = `query_download_${timestamp}.csv`;
+    const filePath = path.join(downloadsPath, fileName);
+
+    // Write the CSV content.
+    fs.writeFile(filePath, csvContent, "utf8", (err) => {
+      if (err) {
+        console.error("Error writing CSV file:", err);
+        new Notification({
+          title: "Download Failed",
+          body: "There was an error writing the CSV file.",
+        }).show();
+        return reject(err);
+      } else {
+        new Notification({
+          title: "Download Complete",
+          body: `CSV file has been saved to: ${filePath}`,
+        }).show();
+        return resolve(filePath);
+      }
+    });
   });
 }
+
+// Helper that downloads data as an ODF
+const downloadODF = async (data) => {
+  try {
+    // Generate the intermediate CSV file.
+    const csvFilePath = await downloadCSV(data);
+    // Ask the main process to convert the CSV to an ODS file.
+    const odsFilePath = await ipcRenderer.invoke("convert-to-ods", csvFilePath);
+    currentOdsFilePath = odsFilePath;
+
+    // Optionally, display a visible notification (or update the UI) that the ODF file was downloaded.
+    console.log("ODF file downloaded to:", odsFilePath);
+    return odsFilePath;
+  } catch (err) {
+    console.error("downloadODF error:", err);
+    throw err;
+  }
+};
 
 function toggleColumn(table, colIndex, button, icons) {
   // Get icons from the passed object.
@@ -215,4 +239,4 @@ function setColumnState(table, colIndex, isExpanded) {
   });
 }
 
-module.exports = { displayResults, downloadCSV, toggleColumn, setColumnState };
+module.exports = { displayResults, downloadODF, toggleColumn, setColumnState };

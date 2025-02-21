@@ -17,8 +17,6 @@ const loadPresets = () => {
   }
 };
 
-const getPresetsByType = (presets, dbType) => presets.filter((p) => p.db_type === dbType).map((p) => p.name);
-
 const getPresetByName = (presets, presetName) => presets.find((p) => p.name === presetName) || null;
 
-module.exports = { loadPresets, getPresetsByType, getPresetByName };
+module.exports = { loadPresets, getPresetByName };
