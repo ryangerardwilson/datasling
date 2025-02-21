@@ -1,6 +1,6 @@
 {
   "name": "datasling",
-  "version": "0.0.17-1",
+  "version": "0.0.18-1",
   "description": "A desktop application for managing MSSQL queries and presets",
   "main": "main.js",
   "scripts": {

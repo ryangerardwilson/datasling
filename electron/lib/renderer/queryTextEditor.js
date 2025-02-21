@@ -17,16 +17,24 @@ const createQueryTextEditor = (notebookEl) => {
     const textarea = document.createElement("textarea");
     textarea.className = "w-full bg-transparent border-none text-green-500 focus:outline-none text-xl resize-none";
     textarea.placeholder = "Type your SQL query here (Ctrl+Enter to run)...";
-    textarea.style.height = "40vh";
+    textarea.style.height = "40vh"; // Initial height
+    textarea.style.minHeight = "2rem"; // Minimum height to avoid collapsing too small
     inputRow.appendChild(textarea);
 
     const autoResize = () => {
-      textarea.style.height = "auto";
+      // Force a reflow by briefly setting height to 0px
+      textarea.style.height = "0px";
+      // Then set it to the actual scrollHeight
       textarea.style.height = `${textarea.scrollHeight}px`;
+      // Sync line numbers height and content
       lineNumbers.style.height = `${textarea.scrollHeight}px`;
-      lineNumbers.textContent = Array.from({ length: textarea.value.split("\n").length }, (_, i) => i + 1).join("\n");
+      const lineCount = textarea.value.split("\n").length;
+      lineNumbers.textContent = Array.from({ length: lineCount }, (_, i) => i + 1).join("\n");
     };
+
+    // Trigger resize on input (typing, pasting, deleting)
     textarea.addEventListener("input", autoResize);
+    // Sync scrolling between textarea and line numbers
     textarea.addEventListener("scroll", () => (lineNumbers.scrollTop = textarea.scrollTop));
 
     const output = document.createElement("div");
@@ -36,7 +44,11 @@ const createQueryTextEditor = (notebookEl) => {
     editor.appendChild(output);
     notebookEl.appendChild(editor);
 
-    setTimeout(() => textarea.focus(), 50);
+    // Initial focus and resize
+    setTimeout(() => {
+      textarea.focus();
+      autoResize(); // Ensure initial height matches content
+    }, 50);
   }
   return editor;
 };

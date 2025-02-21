@@ -56,7 +56,7 @@ function displayResults(data, container) {
   container.appendChild(paginationControls);
 
   const scrollBox = document.createElement("div");
-  scrollBox.className = "max-h-[650px] overflow-y-auto overflow-x-scroll w-auto"; // Matches your draft height
+  scrollBox.className = "max-h-[380px] overflow-y-auto overflow-x-scroll w-auto"; // Matches your draft height
 
   const tableWrapper = document.createElement("div");
   tableWrapper.dataset.rows = JSON.stringify(rows); // Store full data in memory
@@ -67,7 +67,7 @@ function displayResults(data, container) {
   table.className = "table-fixed border-collapse border border-green-500 text-base text-green-500";
 
   const thead = document.createElement("thead");
-  thead.className = "sticky top-0 bg-black z-10"; // Sticky header with background
+  thead.className = "bg-black"; // Removed sticky and z-index
   const headerRow = document.createElement("tr");
   headers.forEach((headerText) => {
     const th = document.createElement("th");
@@ -201,14 +201,17 @@ function setAllColumnsState(table, isExpanded) {
 
   tableWrapper.dataset.isExpanded = isExpanded;
 
-  // Adjust table width based on state
-  table.classList.remove("w-[1000px]");
-  if (isExpanded) {
-    table.classList.add("w-[1000px]");
-  }
+  // Adjust table width dynamically based on number of columns
+  const tableWidth = isExpanded ? `${headers.length * 400}px` : "auto";
+  table.style.width = tableWidth;
 
-  // Update thead and re-render tbody with current page
-  table.querySelector("thead").className = isExpanded ? "sticky top-0 bg-black z-10 " + expandedOuter : "sticky top-0 bg-black z-10 " + contractedOuter;
+  // Update thead columns (no sticky behavior)
+  const thElements = table.querySelectorAll("thead th");
+  thElements.forEach((th) => {
+    th.className = isExpanded ? expandedOuter : contractedOuter;
+  });
+
+  // Re-render tbody with current page
   renderTableBody(tbody, rows, headers, currentPage * 10, (currentPage + 1) * 10, isExpanded);
 }
 
