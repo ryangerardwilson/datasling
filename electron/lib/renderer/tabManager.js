@@ -31,8 +31,8 @@ function createNewTab(ensureInputCell) {
 
   switchTabTo(tabs.length - 1);
 
-  // Ensure a single input cell is created for this notebook.
-  ensureInputCell(notebookEl);
+  ensureInputCell(notebookEl); // Creates the editor inside notebookEl
+  return notebookEl;           // Return the notebook element
 }
 
 function switchTabTo(newIndex) {

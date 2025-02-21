@@ -1,11 +1,13 @@
-// lib/renderer/main.js
+/* lib/renderer/main.js */
 console.log("[INFO] main.js loaded");
 
 const { ipcRenderer } = require("electron");
 const { runAsciiIntro } = require("./lib/renderer/asciiIntro.js");
 const { registerKeyboardShortcuts } = require("./lib/renderer/keyboardShortcuts.js");
 const { createNewTab, switchTab, closeCurrentTab, refreshCurrentTab } = require("./lib/renderer/tabManager.js");
-const { ensureSingleInputCell } = require("./lib/renderer/cellManager.js");
+const { createQueryTextEditor } = require("./lib/renderer/queryTextEditor.js");
+const { setupPresetListener } = require("./lib/renderer/presetSelector.js");
+const { setupQueryListener } = require("./lib/renderer/queryRunner.js");
 const { runRgwfuncsrcMissingHandler } = require("./lib/renderer/rgwfuncsrcMissingHandler.js");
 
 runAsciiIntro();
@@ -13,19 +15,29 @@ runAsciiIntro();
 registerKeyboardShortcuts({
   createNewTab: () => {
     console.log("[INFO] Creating new tab via keyboard shortcut");
-    createNewTab(ensureSingleInputCell);
+    const notebookEl = createNewTab(createQueryTextEditor);
+    const textarea = notebookEl.querySelector("textarea");
+    setupPresetListener(textarea, (preset) => console.log(`Preset selected: ${preset}`));
+    setupQueryListener(notebookEl.querySelector(".query-text-editor"), textarea);
   },
   switchTab,
   closeCurrentTab,
-  refreshCurrentTab: () => refreshCurrentTab(ensureSingleInputCell),
+  refreshCurrentTab: () => {
+    const notebookEl = refreshCurrentTab(createQueryTextEditor);
+    const textarea = notebookEl.querySelector("textarea");
+    setupPresetListener(textarea, (preset) => console.log(`Preset selected: ${preset}`));
+    setupQueryListener(notebookEl.querySelector(".query-text-editor"), textarea);
+  },
 });
 
 window.onload = () => {
   console.log("[INFO] Window loaded. Creating default tab...");
-  createNewTab(ensureSingleInputCell);
+  const notebookEl = createNewTab(createQueryTextEditor);
+  const textarea = notebookEl.querySelector("textarea");
+  setupPresetListener(textarea, (preset) => console.log(`Preset selected: ${preset}`));
+  setupQueryListener(notebookEl.querySelector(".query-text-editor"), textarea);
 };
 
-// Listen for missing .rgwfuncrc signal
 ipcRenderer.on("show-rgwfuncsrc-missing", () => {
   console.log("[INFO] Showing .rgwfuncsrc missing handler");
   runRgwfuncsrcMissingHandler();
