@@ -4,7 +4,7 @@ console.log("[INFO] main.js loaded");
 const { ipcRenderer } = require("electron");
 const { runAsciiIntro } = require("./lib/renderer/asciiIntro.js");
 const { registerKeyboardShortcuts } = require("./lib/renderer/keyboardShortcuts.js");
-const { createNewTab, switchTab, closeCurrentTab, refreshCurrentTab } = require("./lib/renderer/tabManager.js");
+const { createNewTab, switchTab, closeCurrentTab, refreshCurrentTab, createHelpTab } = require("./lib/renderer/tabManager.js");
 const { createQueryTextEditor } = require("./lib/renderer/queryTextEditor.js");
 const { setupPresetListener } = require("./lib/renderer/presetSelector.js");
 const { setupQueryListener } = require("./lib/renderer/queryRunner.js");
@@ -28,6 +28,7 @@ registerKeyboardShortcuts({
     setupPresetListener(textarea, (preset) => console.log(`Preset selected: ${preset}`));
     setupQueryListener(notebookEl.querySelector(".query-text-editor"), textarea);
   },
+  createHelpTab, // Pass the new function
 });
 
 window.onload = () => {

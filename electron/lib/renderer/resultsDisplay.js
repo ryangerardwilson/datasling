@@ -1,12 +1,30 @@
-// resultsDisplay.js
-// Contains functions for displaying query results, downloading CSV, and toggling column widths.
-const { expandIcon, contractIcon } = require("./icons");
+/* lib/renderer/resultsDisplay.js */
+const { ipcRenderer } = require("electron");
 
-function displayResults(data, container, icons) {
-  // icons should include expandIcon and contractIcon.
-  const { expandIcon, contractIcon } = icons;
+function renderTableBody(tbody, rows, headers, startIdx, endIdx, isExpanded) {
+  tbody.innerHTML = ""; // Clear existing rows
+  const contractedInner = "whitespace-nowrap overflow-hidden text-ellipsis";
+  const expandedInner = "whitespace-normal overflow-visible break-words text-left min-h-full text-top w-full";
 
-  // If no data or rows, show a message.
+  for (let i = startIdx; i < endIdx && i < rows.length; i++) {
+    const rowData = rows[i];
+    const tr = document.createElement("tr");
+    headers.forEach(() => {
+      const td = document.createElement("td");
+      td.className = isExpanded ? "p-1 border border-green-500 w-[400px] max-w-[400px] align-top" : "p-1 border border-green-500 w-[175px] max-w-[175px]";
+      const divContent = document.createElement("div");
+      divContent.className = isExpanded ? expandedInner : contractedInner;
+      td.appendChild(divContent);
+      tr.appendChild(td);
+    });
+    Object.values(rowData).forEach((val, idx) => {
+      tr.children[idx].firstChild.textContent = val ?? "";
+    });
+    tbody.appendChild(tr);
+  }
+}
+
+function displayResults(data, container) {
   if (!data || !data.rows || data.rows.length === 0) {
     const noData = document.createElement("div");
     noData.className = "text-base text-green-500";
@@ -16,31 +34,45 @@ function displayResults(data, container, icons) {
   }
 
   const rows = data.rows;
-  // Get header names from first row.
   const headers = Object.keys(rows[0]);
-  // Metadata object provided from main process.
   const meta = data.columns || {};
 
+  // Pagination controls above scrollBox
+  const paginationControls = document.createElement("div");
+  paginationControls.className = "flex justify-start space-x-2 mb-1 text-green-500"; // Left-aligned
+
+  const prevButton = document.createElement("button");
+  prevButton.textContent = "{previous}";
+  prevButton.className = "py-1 hover:text-green-400 disabled:text-gray-500 text-lg";
+  prevButton.disabled = true; // Disabled on page 0
+
+  const nextButton = document.createElement("button");
+  nextButton.textContent = "{next}";
+  nextButton.className = "py-1 hover:text-green-400 disabled:text-gray-500 text-lg";
+  nextButton.disabled = rows.length <= 10; // Disabled if ≤10 rows
+
+  paginationControls.appendChild(prevButton);
+  paginationControls.appendChild(nextButton);
+  container.appendChild(paginationControls);
+
+  const scrollBox = document.createElement("div");
+  scrollBox.className = "max-h-[650px] overflow-y-auto overflow-x-scroll w-auto"; // Matches your draft height
+
   const tableWrapper = document.createElement("div");
-  tableWrapper.className = "overflow-x-auto";
+  tableWrapper.dataset.rows = JSON.stringify(rows); // Store full data in memory
+  tableWrapper.dataset.currentPage = "0"; // Start at page 0
+  tableWrapper.dataset.isExpanded = "false"; // Track expanded state
 
   const table = document.createElement("table");
-  // Using table-fixed ensures consistent column width sizing.
   table.className = "table-fixed border-collapse border border-green-500 text-base text-green-500";
 
   const thead = document.createElement("thead");
+  thead.className = "sticky top-0 bg-black z-10"; // Sticky header with background
   const headerRow = document.createElement("tr");
-  headers.forEach((headerText, index) => {
+  headers.forEach((headerText) => {
     const th = document.createElement("th");
-    // Set collapsed width classes on header cells.
     th.className = "p-1 text-left w-[175px] max-w-[175px] overflow-hidden whitespace-nowrap border border-green-500";
 
-    // Create a flex container for header name and toggle button
-    // justify-between pushes the elements to the left and right edges.
-    const headerRowWrapper = document.createElement("div");
-    headerRowWrapper.className = "flex items-center justify-between";
-
-    // Create a container for the header name and type (stacked vertically)
     const headerTextContainer = document.createElement("div");
     headerTextContainer.className = "flex flex-col overflow-hidden";
 
@@ -49,7 +81,6 @@ function displayResults(data, container, icons) {
     headerName.textContent = headerText;
     headerTextContainer.appendChild(headerName);
 
-    // If column metadata exists, add a small type label.
     if (meta[headerText] && meta[headerText].type && meta[headerText].type.name) {
       const typeLabel = document.createElement("span");
       typeLabel.className = "text-[10px] text-green-600";
@@ -57,24 +88,7 @@ function displayResults(data, container, icons) {
       headerTextContainer.appendChild(typeLabel);
     }
 
-    // Create the toggle button.
-    const toggleButton = document.createElement("button");
-    // Apply smaller icon size (w-4 and h-4) and no left margin.
-    toggleButton.className = "flex-shrink-0";
-    // Set initial state and icon.
-    toggleButton.innerHTML = expandIcon;
-    toggleButton.dataset.expanded = "false";
-    // When clicked, toggle the column state and swap icons.
-    toggleButton.addEventListener("click", () => {
-      toggleColumn(table, index, toggleButton, { expandIcon, contractIcon });
-    });
-
-    // Append header text container to the wrapper.
-    headerRowWrapper.appendChild(headerTextContainer);
-    // Append toggle button so that it appears at the right edge.
-    headerRowWrapper.appendChild(toggleButton);
-
-    th.appendChild(headerRowWrapper);
+    th.appendChild(headerTextContainer);
     headerRow.appendChild(th);
   });
 
@@ -82,25 +96,37 @@ function displayResults(data, container, icons) {
   table.appendChild(thead);
 
   const tbody = document.createElement("tbody");
-  rows.forEach((rowData) => {
-    const tr = document.createElement("tr");
-    headers.forEach(() => {
-      const td = document.createElement("td");
-      td.className = "p-1 border border-green-500 w-[175px] max-w-[175px]";
-      const divContent = document.createElement("div");
-      divContent.className = "whitespace-nowrap overflow-hidden text-ellipsis";
-      td.appendChild(divContent);
-      tr.appendChild(td);
-    });
-    Object.values(rowData).forEach((val, idx) => {
-      tr.children[idx].firstChild.textContent = val;
-    });
-    tbody.appendChild(tr);
-  });
+  renderTableBody(tbody, rows, headers, 0, 10, false); // Initial 10 rows, collapsed
   table.appendChild(tbody);
 
   tableWrapper.appendChild(table);
-  container.appendChild(tableWrapper);
+  scrollBox.appendChild(tableWrapper);
+  container.appendChild(scrollBox);
+
+  // Pagination button event listeners
+  prevButton.addEventListener("click", () => {
+    let currentPage = parseInt(tableWrapper.dataset.currentPage);
+    if (currentPage > 0) {
+      currentPage--;
+      tableWrapper.dataset.currentPage = currentPage;
+      const isExpanded = tableWrapper.dataset.isExpanded === "true";
+      renderTableBody(tbody, rows, headers, currentPage * 10, (currentPage + 1) * 10, isExpanded);
+      prevButton.disabled = currentPage === 0;
+      nextButton.disabled = (currentPage + 1) * 10 >= rows.length;
+    }
+  });
+
+  nextButton.addEventListener("click", () => {
+    let currentPage = parseInt(tableWrapper.dataset.currentPage);
+    if ((currentPage + 1) * 10 < rows.length) {
+      currentPage++;
+      tableWrapper.dataset.currentPage = currentPage;
+      const isExpanded = tableWrapper.dataset.isExpanded === "true";
+      renderTableBody(tbody, rows, headers, currentPage * 10, (currentPage + 1) * 10, isExpanded);
+      prevButton.disabled = currentPage === 0;
+      nextButton.disabled = (currentPage + 1) * 10 >= rows.length;
+    }
+  });
 }
 
 function downloadCSV(data) {
@@ -125,23 +151,15 @@ function downloadCSV(data) {
       csvContent += rowData.join(",") + "\n";
     });
 
-    // Use Node's built-in modules and @electron/remote
     const fs = require("fs");
     const path = require("path");
     const { app, Notification } = require("@electron/remote");
 
-    // Get the user's Downloads folder path
     const downloadsPath = app.getPath("downloads");
-
-    // Get current timestamp in YYYYMMDDHHMMSS format.
-    const now = new Date();
-    const timestamp = now.getFullYear().toString() + (now.getMonth() + 1).toString().padStart(2, "0") + now.getDate().toString().padStart(2, "0") + now.getHours().toString().padStart(2, "0") + now.getMinutes().toString().padStart(2, "0") + now.getSeconds().toString().padStart(2, "0");
-
-    // Create the file name.
+    const timestamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
     const fileName = `query_download_${timestamp}.csv`;
     const filePath = path.join(downloadsPath, fileName);
 
-    // Write the CSV content.
     fs.writeFile(filePath, csvContent, "utf8", (err) => {
       if (err) {
         console.error("Error writing CSV file:", err);
@@ -150,27 +168,20 @@ function downloadCSV(data) {
           body: "There was an error writing the CSV file.",
         }).show();
         return reject(err);
-      } else {
-        new Notification({
-          title: "Download Complete",
-          body: `CSV file has been saved to: ${filePath}`,
-        }).show();
-        return resolve(filePath);
       }
+      new Notification({
+        title: "Download Complete",
+        body: `CSV file has been saved to: ${filePath}`,
+      }).show();
+      return resolve(filePath);
     });
   });
 }
 
-// Helper that downloads data as an ODF
 const downloadODF = async (data) => {
   try {
-    // Generate the intermediate CSV file.
     const csvFilePath = await downloadCSV(data);
-    // Ask the main process to convert the CSV to an ODS file.
     const odsFilePath = await ipcRenderer.invoke("convert-to-ods", csvFilePath);
-    currentOdsFilePath = odsFilePath;
-
-    // Optionally, display a visible notification (or update the UI) that the ODF file was downloaded.
     console.log("ODF file downloaded to:", odsFilePath);
     return odsFilePath;
   } catch (err) {
@@ -179,64 +190,26 @@ const downloadODF = async (data) => {
   }
 };
 
-function toggleColumn(table, colIndex, button, icons) {
-  // Get icons from the passed object.
-  const { expandIcon, contractIcon } = icons;
+function setAllColumnsState(table, isExpanded) {
+  const contractedOuter = "p-1 text-left w-[175px] max-w-[175px] border border-green-500";
+  const expandedOuter = "p-1 text-left w-[400px] max-w-[400px] align-top border border-green-500";
+  const tableWrapper = table.parentElement;
+  const tbody = table.querySelector("tbody");
+  const rows = JSON.parse(tableWrapper.dataset.rows || "[]");
+  const headers = Object.keys(rows[0] || {});
+  const currentPage = parseInt(tableWrapper.dataset.currentPage || "0");
 
-  const isExpanded = button.dataset.expanded === "true";
-  const newState = !isExpanded;
-  setColumnState(table, colIndex, newState);
-  button.dataset.expanded = newState ? "true" : "false";
+  tableWrapper.dataset.isExpanded = isExpanded;
 
-  // Swap the icon: use contractIcon when expanded, expandIcon when collapsed.
-  button.innerHTML = newState ? contractIcon : expandIcon;
+  // Adjust table width based on state
+  table.classList.remove("w-[1000px]");
+  if (isExpanded) {
+    table.classList.add("w-[1000px]");
+  }
+
+  // Update thead and re-render tbody with current page
+  table.querySelector("thead").className = isExpanded ? "sticky top-0 bg-black z-10 " + expandedOuter : "sticky top-0 bg-black z-10 " + contractedOuter;
+  renderTableBody(tbody, rows, headers, currentPage * 10, (currentPage + 1) * 10, isExpanded);
 }
 
-function setColumnState(table, colIndex, isExpanded) {
-  // Classes for column widths.
-  const contractedOuter = ["w-[175px]", "max-w-[175px]"];
-  const expandedOuter = ["w-[400px]", "max-w-[400px]"];
-
-  // Classes for inner content formatting.
-  const contractedInner = ["whitespace-nowrap", "overflow-hidden", "text-ellipsis"];
-  const expandedInner = ["whitespace-normal", "overflow-visible", "break-words"];
-
-  // Update header cells.
-  table.querySelectorAll("thead tr").forEach((row) => {
-    if (row.children[colIndex]) {
-      const cell = row.children[colIndex];
-      // Always remove both sets of width classes.
-      cell.classList.remove(...contractedOuter, ...expandedOuter);
-      // Then add the appropriate width classes.
-      if (isExpanded) {
-        cell.classList.add(...expandedOuter);
-      } else {
-        cell.classList.add(...contractedOuter);
-      }
-    }
-  });
-
-  // Update body cells and inner content.
-  table.querySelectorAll("tbody tr").forEach((row) => {
-    if (row.children[colIndex]) {
-      const td = row.children[colIndex];
-      td.classList.remove(...contractedOuter, ...expandedOuter);
-      if (isExpanded) {
-        td.classList.add(...expandedOuter);
-      } else {
-        td.classList.add(...contractedOuter);
-      }
-      const contentDiv = td.firstChild;
-      if (contentDiv) {
-        contentDiv.classList.remove(...contractedInner, ...expandedInner);
-        if (isExpanded) {
-          contentDiv.classList.add(...expandedInner);
-        } else {
-          contentDiv.classList.add(...contractedInner);
-        }
-      }
-    }
-  });
-}
-
-module.exports = { displayResults, downloadODF, toggleColumn, setColumnState };
+module.exports = { displayResults, downloadODF, setAllColumnsState };

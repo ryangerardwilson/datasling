@@ -1,11 +1,11 @@
 {
   "name": "datasling",
-  "version": "0.0.15-1",
+  "version": "0.0.17-1",
   "description": "A desktop application for managing MSSQL queries and presets",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
-    "make": "npx electron-forge make"
+    "start": "tailwind main.css; electron .",
+    "make": "tailwind main.css; npx electron-forge make"
   },
   "keywords": [],
   "author": "Ryan Gerard Wilson <ryangerardwilson@gmail.com>",

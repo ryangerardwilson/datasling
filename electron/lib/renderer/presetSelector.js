@@ -111,9 +111,7 @@ const setupPresetListener = async (textarea, onPresetSelected) => {
     if (currentLine === "@preset::") {
       try {
         const allPresets = await ipcRenderer.invoke("get-presets");
-        const filteredPresets = allPresets
-          .filter((preset) => supportedDbTypes.includes(preset.db_type))
-          .map((preset) => preset.name);
+        const filteredPresets = allPresets.filter((preset) => supportedDbTypes.includes(preset.db_type)).map((preset) => preset.name);
         showPresetDropdown(filteredPresets, onPresetSelected, textarea);
       } catch (err) {
         console.error("Error loading presets:", err);

@@ -1,4 +1,4 @@
-// tabManager.js
+/* lib/renderer/tabManager.js */
 let tabs = [];
 let currentTabIndex = -1;
 
@@ -30,9 +30,68 @@ function createNewTab(ensureInputCell) {
   });
 
   switchTabTo(tabs.length - 1);
+  ensureInputCell(notebookEl);
+  return notebookEl;
+}
 
-  ensureInputCell(notebookEl); // Creates the editor inside notebookEl
-  return notebookEl;           // Return the notebook element
+function createHelpTab() {
+  const notebookEl = document.createElement("div");
+  notebookEl.className = "notebook";
+  notebookEl.innerHTML = "";
+  const container = document.getElementById("notebookContainer");
+  container.appendChild(notebookEl);
+
+  const tabBar = document.getElementById("tabBar");
+  const tabButton = document.createElement("button");
+  tabButton.className = "px-3 py-1 text-lg border border-green-500 rounded hover:bg-green-500 hover:text-black focus:outline-none";
+  const title = "helpDocs";
+  tabButton.textContent = title;
+  tabBar.appendChild(tabButton);
+
+  const tab = {
+    id: Date.now(),
+    title,
+    notebookEl,
+    tabButton,
+  };
+  tabs.push(tab);
+
+  tabButton.addEventListener("click", () => {
+    const index = tabs.findIndex((t) => t.id === tab.id);
+    switchTabTo(index);
+  });
+
+  // Add help content
+  const helpContent = document.createElement("div");
+  helpContent.className = "bg-black/80 text-green-500 font-mono p-4 rounded text-xl";
+  helpContent.innerHTML = `
+    <h2 class="text-2xl mb-2">How to Use DataSling</h2>
+    <pre class="whitespace-pre-wrap">
+Welcome to DataSling, your SQL query tool!
+
+Key Commands:
+- Ctrl + T: Open a new query tab
+- Ctrl + H: Open this help tab
+- Ctrl + Left/Right Arrow: Switch between tabs
+- Ctrl + Shift + W: Close the current tab
+- Ctrl + R: Refresh the current tab
+- Ctrl + Enter: Run the query in the current tab
+- Ctrl + +/-: Zoom in/out
+- Tab (in textarea): Insert 2 spaces
+- Ctrl + Shift + Enter (in textarea): Set tab title from selected comment (e.g., "-- My Query")
+
+Query Tips:
+- Type "@preset::" to select a database preset (e.g., MSSQL, MySQL)
+- Use multiple presets in one tab by separating queries with blank lines
+- Results can be downloaded as ODS or opened in LibreOffice
+
+Enjoy querying!
+    </pre>
+  `;
+  notebookEl.appendChild(helpContent);
+
+  switchTabTo(tabs.length - 1);
+  return notebookEl;
 }
 
 function switchTabTo(newIndex) {
@@ -45,14 +104,10 @@ function switchTabTo(newIndex) {
   tabs[newIndex].notebookEl.style.display = "block";
   tabs[newIndex].tabButton.classList.add("bg-green-500", "text-black");
 
-  // Ensure the input area is focused.
-  const inputCell = tabs[newIndex].notebookEl.querySelector(".input-cell");
-  if (inputCell) {
-    const txt = inputCell.querySelector("textarea");
-    if (txt)
-      setTimeout(() => {
-        txt.focus();
-      }, 50);
+  const editor = tabs[newIndex].notebookEl.querySelector(".query-text-editor");
+  if (editor) {
+    const txt = editor.querySelector("textarea");
+    if (txt) setTimeout(() => txt.focus(), 50);
   }
 }
 
@@ -80,15 +135,11 @@ function refreshCurrentTab(ensureInputCell) {
   if (currentTabIndex < 0) return;
   const tab = tabs[currentTabIndex];
   tab.notebookEl.innerHTML = "";
-  // Create a new input cell.
   ensureInputCell(tab.notebookEl);
-  const inputCell = tab.notebookEl.querySelector(".input-cell");
-  if (inputCell) {
-    const txt = inputCell.querySelector("textarea");
-    if (txt)
-      setTimeout(() => {
-        txt.focus();
-      }, 50);
+  const editor = tab.notebookEl.querySelector(".query-text-editor");
+  if (editor) {
+    const txt = editor.querySelector("textarea");
+    if (txt) setTimeout(() => txt.focus(), 50);
   }
 }
 
@@ -104,6 +155,7 @@ function getCurrentTab() {
 
 module.exports = {
   createNewTab,
+  createHelpTab, // Export the new function
   switchTab,
   closeCurrentTab,
   refreshCurrentTab,

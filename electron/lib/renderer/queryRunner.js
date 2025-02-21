@@ -1,7 +1,6 @@
 /* lib/renderer/queryRunner.js */
 const { ipcRenderer } = require("electron");
-const { displayResults, downloadODF, toggleColumn, setColumnState } = require("./resultsDisplay.js");
-const { expandIcon, contractIcon } = require("./icons.js");
+const { displayResults, downloadODF, setAllColumnsState } = require("./resultsDisplay.js");
 
 let currentPreset = null;
 let currentOdsFilePath = null;
@@ -32,7 +31,7 @@ const runQuery = async (editor, query) => {
   try {
     data = await ipcRenderer.invoke("database-query", { query, preset: currentPreset });
     if (status.parentNode === resultContainer) resultContainer.removeChild(status);
-    displayResults(data, resultContainer, { expandIcon, contractIcon, toggleColumn, setColumnState });
+    displayResults(data, resultContainer);
   } catch (err) {
     console.error("Database query failed:", err);
     if (status.parentNode === resultContainer) resultContainer.removeChild(status);
@@ -59,7 +58,7 @@ const runQuery = async (editor, query) => {
   }
 
   const actionsDiv = document.createElement("div");
-  actionsDiv.className = "action-buttons mt-1 space-x-2 text-xl";
+  actionsDiv.className = "action-buttons mt-1 space-x-2 text-xl flex";
 
   const downloadButton = document.createElement("button");
   downloadButton.textContent = "{download}";
@@ -91,6 +90,33 @@ const runQuery = async (editor, query) => {
   closeButton.className = "text-green-500 hover:text-green-400";
   closeButton.addEventListener("click", () => resultContainer.remove());
   actionsDiv.appendChild(closeButton);
+
+  const expandButton = document.createElement("button");
+  expandButton.textContent = "{expand}";
+  expandButton.className = "text-green-500 hover:text-green-400";
+  expandButton.addEventListener("click", () => {
+    const table = resultContainer.querySelector("table");
+    if (table) {
+      setAllColumnsState(table, true);
+      expandButton.style.display = "none";
+      collapseButton.style.display = "inline";
+    }
+  });
+  actionsDiv.appendChild(expandButton);
+
+  const collapseButton = document.createElement("button");
+  collapseButton.textContent = "{collapse}";
+  collapseButton.className = "text-green-500 hover:text-green-400";
+  collapseButton.style.display = "none"; // Hidden initially
+  collapseButton.addEventListener("click", () => {
+    const table = resultContainer.querySelector("table");
+    if (table) {
+      setAllColumnsState(table, false);
+      collapseButton.style.display = "none";
+      expandButton.style.display = "inline";
+    }
+  });
+  actionsDiv.appendChild(collapseButton);
 
   resultContainer.appendChild(actionsDiv);
 };
