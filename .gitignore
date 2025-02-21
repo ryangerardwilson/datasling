@@ -1,6 +1,6 @@
-node_modules/
-out/
-logs/
+electron/node_modules
+electron/out
+electron/logs
 *.log
 *.swp
 debian/version_build_folders/*

@@ -1,11 +1,11 @@
 {
   "name": "datasling",
-  "version": "0.0.9-1",
+  "version": "0.0.14-1",
   "description": "A desktop application for managing MSSQL queries and presets",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "make": "npx electron-forge make -- --ignore='^(debian)(/|$)|^(publish\\.py)$|^(out)(/|$)|^.*\\.(md|log)$'"
+    "make": "npx electron-forge make"
   },
   "keywords": [],
   "author": "Ryan Gerard Wilson <ryangerardwilson@gmail.com>",
@@ -13,6 +13,7 @@
   "dependencies": {
     "@electron/remote": "^2.1.2",
     "mssql": "^11.0.1",
+    "mysql2": "^3.12.0",
     "table-dragger": "^2.0.5"
   },
   "devDependencies": {

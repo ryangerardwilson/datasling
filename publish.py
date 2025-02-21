@@ -2,7 +2,7 @@
 """
 This script publishes your Node/Electron datasling project (versioned with .deb repackaging).
 It assumes that:
-  • Your Electron build is created via "npm run make" (producing a .deb in out/make/deb/x64)
+  • Your Electron build is created via "npm run make" (producing a .deb in electron/out/make/deb/x64)
   • The original .deb is named like: datasling_1.0.0_amd64.deb
   • A remote APT repository tree is stored on your VM.
 
@@ -13,9 +13,11 @@ SSH details are read from ~/.rgwfuncsrc under the preset "icdattcwsm".
 
 The script performs these steps:
   1. Query the remote repository to compute a new version number.
-  2. Updates package.json and renderer-modules/asciiIntro.js with the new version.
-  3. Builds the project with "npm run make".
-  4. Locates the built .deb, extracts and updates its control file with the new version.
+  2. Updates electron/package.json and electron/renderer-modules/asciiIntro.js with the new version.
+  3. Builds the project with "npm run make" (executed from the electron dir).
+  4. Locates the built .deb, extracts it and updates:
+       • The control file with the new version.
+       • Adds a post-installation script (postinst) to fix chrome-sandbox permissions.
   5. Builds a fresh .deb and updates the APT repository structure.
   6. Pushes the repository to the remote server.
   7. Cleans up old build folders and .deb files.
@@ -29,17 +31,16 @@ import glob
 from packaging.version import parse as parse_version
 import tempfile
 
-
 # Optionally force a new major version (set to an integer, e.g., 1) or leave as None.
 MAJOR_RELEASE_NUMBER = 0
 
 ###############################################################################
-# UPDATE package.json VERSION
+# UPDATE electron/package.json VERSION
 ###############################################################################
 
 
 def update_package_json_version(new_version):
-    pkgjson_path = "package.json"
+    pkgjson_path = os.path.join("electron", "package.json")
     if not os.path.exists(pkgjson_path):
         raise FileNotFoundError(f"package.json not found at {pkgjson_path}")
 
@@ -55,12 +56,12 @@ def update_package_json_version(new_version):
     print(f"[INFO] Updated package.json version to: {new_version}")
 
 ###############################################################################
-# UPDATE renderer-modules/asciiIntro.js VERSION
+# UPDATE electron/renderer-modules/asciiIntro.js VERSION
 ###############################################################################
 
 
 def update_ascii_intro_js_version(new_version):
-    filename = "renderer-modules/asciiIntro.js"
+    filename = os.path.join("electron", "lib", "renderer", "asciiIntro.js")
     if not os.path.exists(filename):
         raise FileNotFoundError(f"{filename} not found")
 
@@ -86,10 +87,6 @@ def update_ascii_intro_js_version(new_version):
 
 
 def get_new_version(MAJOR_RELEASE_NUMBER=None):
-    import os
-    import subprocess
-    import json
-    import re
     config_path = os.path.expanduser("~/.rgwfuncsrc")
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Cannot find config file: {config_path}")
@@ -107,7 +104,6 @@ def get_new_version(MAJOR_RELEASE_NUMBER=None):
 
     # Remote .deb files are located under:
     remote_deb_dir = "/home/rgw/Apps/frontend-sites/files.ryangerardwilson.com/datasling/debian/dists/stable/main/binary-amd64"
-    # Use find instead of ls for more robust globbing:
     ssh_cmd = (
         f"ssh -i {ssh_key_path} {ssh_user}@{host} "
         f"\"find {remote_deb_dir} -maxdepth 1 -type f -name 'datasling_*.deb'\""
@@ -125,7 +121,6 @@ def get_new_version(MAJOR_RELEASE_NUMBER=None):
         print(f"[INFO] No existing .deb found remotely – using initial version {new_version}")
         return new_version
 
-    # If there are multiple files, pick the last line (assuming that is recent)
     deb_file_path = output.split("\n")[-1].strip()
     filename = os.path.basename(deb_file_path)
 
@@ -170,9 +165,6 @@ def get_new_version(MAJOR_RELEASE_NUMBER=None):
 
 
 def remove_old_remote_debs():
-    """
-    Removes all datasling_*.deb files in the remote repository folder.
-    """
     import json
     config_path = os.path.expanduser("~/.rgwfuncsrc")
     if not os.path.exists(config_path):
@@ -189,7 +181,6 @@ def remove_old_remote_debs():
     remote_deb_dir = (
         "/home/rgw/Apps/frontend-sites/files.ryangerardwilson.com/datasling/debian/dists/stable/main/binary-amd64"
     )
-    # Invoke bash explicitly and remove all .deb files.
     ssh_cmd = (
         f"ssh -i {ssh_key_path} {ssh_user}@{host} \"bash -c 'cd {remote_deb_dir} && rm -f datasling_*.deb'\""
     )
@@ -197,44 +188,28 @@ def remove_old_remote_debs():
     subprocess.check_call(ssh_cmd, shell=True)
     print("[INFO] Removed all remote .deb files.")
 
-
 ###############################################################################
 # PUBLISH RELEASE
 ###############################################################################
+
+
 def publish_release(version):
     def build_deb(version):
         print("[INFO] Starting build_deb step…")
         update_package_json_version(version)
         update_ascii_intro_js_version(version)
 
-        # Move the entire "debian" folder to a temporary location
-        original_debian = os.path.join(os.getcwd(), "debian")
-        temp_dir = os.path.expanduser("~/.datasling_temp")
-        if not os.path.exists(temp_dir):
-            os.makedirs(temp_dir)
-        temp_debian = os.path.join(temp_dir, "debian")
-        if os.path.exists(original_debian):
-            print("[INFO] Moving 'debian' folder to temporary location...")
-            shutil.move(original_debian, temp_debian)
-        else:
-            print("[INFO] No 'debian' folder found to move.")
+        print("[INFO] Running 'npm run make' inside the electron directory...")
+        subprocess.check_call("npm run make", shell=True, cwd="electron")
 
-        try:
-            print("[INFO] Running 'npm run make'...")
-            subprocess.check_call("npm run make", shell=True)
-        finally:
-            # Restore the debian folder regardless of make success
-            if os.path.exists(temp_debian):
-                print("[INFO] Restoring 'debian' folder from temporary location...")
-                shutil.move(temp_debian, original_debian)
-
-        built_debs = glob.glob("out/make/deb/x64/datasling_*_amd64.deb")
+        # The built .deb is now in electron/out/make/deb/x64
+        built_debs = glob.glob(os.path.join("electron", "out", "make", "deb", "x64", "datasling_*_amd64.deb"))
         if not built_debs:
-            raise FileNotFoundError("No built datasling .deb found in out/make/deb/x64")
+            raise FileNotFoundError("No built datasling .deb found in electron/out/make/deb/x64")
         original_deb_file = sorted(built_debs)[0]
         print(f"[INFO] Found built .deb: {original_deb_file}")
 
-        # Build repository files under .debian (the local repackaging folder)
+        # Prepare repository build workspace under debian/version_build_folders
         build_root = os.path.join("debian", "version_build_folders", f"datasling_{version}")
         if os.path.exists(build_root):
             shutil.rmtree(build_root)
@@ -246,6 +221,7 @@ def publish_release(version):
         print(f"[INFO] Extracting {original_deb_file} into {build_root} …")
         subprocess.check_call(["dpkg-deb", "-R", original_deb_file, build_root])
 
+        # Update the control file with the new version.
         control_path = os.path.join(build_root, "DEBIAN", "control")
         if not os.path.exists(control_path):
             raise FileNotFoundError(f"Control file not found at {control_path}")
@@ -260,6 +236,21 @@ def publish_release(version):
         with open(control_path, "w", encoding="utf-8") as f:
             f.writelines(new_control_lines)
         print(f"[INFO] Updated control file with version {version}")
+
+        # Create a postinst script that will be executed upon installation.
+        postinst_path = os.path.join(build_root, "DEBIAN", "postinst")
+        postinst_contents = """#!/bin/bash
+set -e
+# Ensure that the chrome-sandbox binary is owned by root and has mode 4755.
+chown root:root /usr/lib/datasling/chrome-sandbox
+chmod 4755 /usr/lib/datasling/chrome-sandbox
+exit 0
+"""
+        with open(postinst_path, "w", encoding="utf-8") as f:
+            f.write(postinst_contents)
+        # Set the executable permission for postinst.
+        os.chmod(postinst_path, 0o755)
+        print(f"[INFO] Created and set permissions for postinst script at {postinst_path}")
 
         output_deb = os.path.join(out_debs_dir, f"datasling_{version}_amd64.deb")
         subprocess.check_call(["dpkg-deb", "--build", build_root, output_deb])
@@ -391,7 +382,6 @@ def publish_release(version):
     prepare_deb_for_distribution(version)
     remove_old_remote_debs()
     push_to_server()
-    # remove_old_remote_debs()
     delete_all_but_last_version_build_folders()
     delete_all_but_last_version_debs()
     print("[INFO] publish_release completed successfully.")
@@ -402,8 +392,6 @@ def publish_release(version):
 
 
 def publish_install_script():
-
-    # Prepare the install.sh content as a string.
     install_sh_contents = """#!/bin/bash
 # This installation script configures the datasling repository and fixes chrome-sandbox permissions.
 # Run with: bash -c "sh <(curl -fsSL https://files.ryangerardwilson.com/datasling/install.sh)"
@@ -419,21 +407,14 @@ echo "deb [arch=amd64 signed-by=/usr/share/keyrings/datasling.gpg] https://files
 sudo apt update
 sudo apt-get install datasling
 
-# Ensure that the chrome-sandbox binary is properly configured.
-sudo chown root:root /usr/lib/datasling/chrome-sandbox
-sudo chmod 4755 /usr/lib/datasling/chrome-sandbox
-
 echo "Installation complete."
 """
-
-    # Option 1: Write the contents to a temporary file.
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmpfile:
         tmpfile.write(install_sh_contents)
         local_install_script = tmpfile.name
 
     print("[INFO] Temporary install.sh written to:", local_install_script)
 
-    # Retrieve SSH details (assuming these details exist in ~/.rgwfuncsrc as in your publish.py)
     funcs_path = os.path.expanduser("~/.rgwfuncsrc")
     if not os.path.exists(funcs_path):
         raise FileNotFoundError(f"Cannot find config file: {funcs_path}")
@@ -447,10 +428,8 @@ echo "Installation complete."
     ssh_user = preset["ssh_user"]
     ssh_key_path = preset["ssh_key_path"]
 
-    # Define the remote destination path for install.sh.
     remote_path = "/home/rgw/Apps/frontend-sites/files.ryangerardwilson.com/datasling/install.sh"
 
-    # Use rsync to copy install.sh to the remote host.
     rsync_cmd = (
         f"rsync -avz -e 'ssh -i {ssh_key_path}' {local_install_script} {ssh_user}@{host}:{remote_path}"
     )
@@ -459,14 +438,12 @@ echo "Installation complete."
     subprocess.check_call(rsync_cmd, shell=True)
     print(f"[INFO] install.sh published to {remote_path}")
 
-    # Change the permissions of install.sh on the remote host so it is world-readable (chmod 644)
     chmod_cmd = f"ssh -i {ssh_key_path} {ssh_user}@{host} 'chmod 644 {remote_path}'"
     print("[INFO] Running remote chmod command:")
     print(chmod_cmd)
     subprocess.check_call(chmod_cmd, shell=True)
     print("[INFO] Remote install.sh permissions updated to 644.")
 
-    # Cleanup the temporary file.
     os.remove(local_install_script)
 
 

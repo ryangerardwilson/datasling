@@ -4,9 +4,9 @@ A minimalistic SQL-querying GUI tool, sans inherent ugliness of commercial softw
 
 ## 1. Prerequisites
 
-- Ubuntu 24.04 LTS
+    Ubuntu 24.04 LTS
 
-## 2. Installation
+## 2. Installation/ Upgrade to Latest Version
 
     bash -c "sh <(curl -fsSL https://files.ryangerardwilson.com/datasling/install.sh)"
 
