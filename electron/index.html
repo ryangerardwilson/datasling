@@ -9,10 +9,20 @@
       ::-webkit-scrollbar {
         display: none;
       }
+      /* main.css or index.html <style> */
+      .query-text-editor .flex {
+        transform-origin: top left; /* Scale from top-left */
+        display: flex; /* Ensure flex behavior persists */
+      }
+
+      /* Prevent textarea from having its own scrollbars */
+      .query-text-editor textarea {
+        overflow: hidden; /* Scrolling handled by wrapper */
+      }
     </style>
   </head>
 
-  <body class="bg-black/80 text-green-500 font-mono p-4 min-h-screen overflow-auto">
+  <body class="bg-black/80 text-green-500 font-mono p-4 min-h-screen text-2xl overflow-auto">
     <!-- Tab bar container -->
     <div id="tabBar" class="flex space-x-2 mb-4"></div>
 

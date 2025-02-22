@@ -11,7 +11,7 @@ function createNewTab(ensureInputCell) {
 
   const tabBar = document.getElementById("tabBar");
   const tabButton = document.createElement("button");
-  tabButton.className = "px-3 py-1 text-lg border border-green-500 rounded hover:bg-green-500 hover:text-black focus:outline-none";
+  tabButton.className = "px-3 py-1 text-2xl border border-green-500 rounded hover:bg-green-500 hover:text-black focus:outline-none";
   const title = tabs.length === 0 ? "Tab1" : "New Tab";
   tabButton.textContent = title;
   tabBar.appendChild(tabButton);
@@ -43,7 +43,7 @@ function createHelpTab() {
 
   const tabBar = document.getElementById("tabBar");
   const tabButton = document.createElement("button");
-  tabButton.className = "px-3 py-1 text-lg border border-green-500 rounded hover:bg-green-500 hover:text-black focus:outline-none";
+  tabButton.className = "px-3 py-1 text-2xl border border-green-500 rounded hover:bg-green-500 hover:text-black focus:outline-none";
   const title = "helpDocs";
   tabButton.textContent = title;
   tabBar.appendChild(tabButton);
@@ -63,7 +63,7 @@ function createHelpTab() {
 
   // Add help content
   const helpContent = document.createElement("div");
-  helpContent.className = "bg-black/80 text-green-500 font-mono p-4 rounded text-xl";
+  helpContent.className = "bg-black/80 text-green-500 font-mono p-4 rounded text-2xl";
   helpContent.innerHTML = `
     <h2 class="text-2xl mb-2">How to Use DataSling</h2>
     <pre class="whitespace-pre-wrap">

@@ -17,12 +17,12 @@ const runQuery = async (editor, query) => {
   resultContainer.className = "result-container";
 
   const queryHeader = document.createElement("div");
-  queryHeader.className = "mb-1 text-xl text-green-500";
+  queryHeader.className = "mb-1 text-2xl text-green-500";
   queryHeader.textContent = `query_${generateTimestamp()}`;
   resultContainer.appendChild(queryHeader);
 
   const status = document.createElement("div");
-  status.className = "text-xl";
+  status.className = "text-2xl";
   status.textContent = "Running query...";
   resultContainer.appendChild(status);
   output.appendChild(resultContainer);
@@ -37,17 +37,17 @@ const runQuery = async (editor, query) => {
     if (status.parentNode === resultContainer) resultContainer.removeChild(status);
 
     const errorMsg = document.createElement("div");
-    errorMsg.className = "text-xl text-red-500";
+    errorMsg.className = "text-2xl text-red-500";
     errorMsg.textContent = `Query failed: ${err.message.match(/MSSQL query failed: (.+)/)?.[1] || err.message.match(/Error: (.+)/)?.[1] || "Unknown error"}`;
     resultContainer.appendChild(errorMsg);
 
     const errorDetails = document.createElement("div");
-    errorDetails.className = "text-sm text-red-300 mt-1";
+    errorDetails.className = "text-2xl text-red-300 mt-1";
     errorDetails.textContent = "See console for full stack trace.";
     resultContainer.appendChild(errorDetails);
 
     const actionsErr = document.createElement("div");
-    actionsErr.className = "mt-2 space-x-2 text-xl flex action-buttons";
+    actionsErr.className = "mt-2 space-x-2 text-2xl flex action-buttons";
     const closeErr = document.createElement("button");
     closeErr.textContent = "Close";
     closeErr.className = "text-green-500 hover:text-green-400";
@@ -58,7 +58,7 @@ const runQuery = async (editor, query) => {
   }
 
   const actionsDiv = document.createElement("div");
-  actionsDiv.className = "action-buttons mt-1 space-x-2 text-xl flex";
+  actionsDiv.className = "action-buttons mt-1 space-x-2 text-2xl flex";
 
   const downloadButton = document.createElement("button");
   downloadButton.textContent = "{download}";

@@ -27,7 +27,7 @@ function renderTableBody(tbody, rows, headers, startIdx, endIdx, isExpanded) {
 function displayResults(data, container) {
   if (!data || !data.rows || data.rows.length === 0) {
     const noData = document.createElement("div");
-    noData.className = "text-base text-green-500";
+    noData.className = "text-green-500";
     noData.textContent = "No data returned from the query.";
     container.appendChild(noData);
     return;
@@ -43,12 +43,12 @@ function displayResults(data, container) {
 
   const prevButton = document.createElement("button");
   prevButton.textContent = "{previous}";
-  prevButton.className = "py-1 hover:text-green-400 disabled:text-gray-500 text-lg";
+  prevButton.className = "py-1 hover:text-green-400 disabled:text-gray-500 text-2xl";
   prevButton.disabled = true; // Disabled on page 0
 
   const nextButton = document.createElement("button");
   nextButton.textContent = "{next}";
-  nextButton.className = "py-1 hover:text-green-400 disabled:text-gray-500 text-lg";
+  nextButton.className = "py-1 hover:text-green-400 disabled:text-gray-500 text-2xl";
   nextButton.disabled = rows.length <= 10; // Disabled if ≤10 rows
 
   paginationControls.appendChild(prevButton);
@@ -56,7 +56,7 @@ function displayResults(data, container) {
   container.appendChild(paginationControls);
 
   const scrollBox = document.createElement("div");
-  scrollBox.className = "max-h-[380px] overflow-y-auto overflow-x-scroll w-auto"; // Matches your draft height
+  scrollBox.className = "max-h-[489px] overflow-y-auto overflow-x-scroll w-auto"; // Matches your draft height
 
   const tableWrapper = document.createElement("div");
   tableWrapper.dataset.rows = JSON.stringify(rows); // Store full data in memory
@@ -64,7 +64,7 @@ function displayResults(data, container) {
   tableWrapper.dataset.isExpanded = "false"; // Track expanded state
 
   const table = document.createElement("table");
-  table.className = "table-fixed border-collapse border border-green-500 text-base text-green-500";
+  table.className = "table-fixed border-collapse border border-green-500 text-2xl text-green-500";
 
   const thead = document.createElement("thead");
   thead.className = "bg-black"; // Removed sticky and z-index
@@ -83,7 +83,7 @@ function displayResults(data, container) {
 
     if (meta[headerText] && meta[headerText].type && meta[headerText].type.name) {
       const typeLabel = document.createElement("span");
-      typeLabel.className = "text-[10px] text-green-600";
+      typeLabel.className = "text-lg text-green-300";
       typeLabel.textContent = meta[headerText].type.name;
       headerTextContainer.appendChild(typeLabel);
     }
