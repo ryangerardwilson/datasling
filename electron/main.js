@@ -26,6 +26,8 @@ const createWindow = () => {
   remoteMain.enable(win.webContents);
   win.loadFile(path.join(__dirname, "index.html"));
   win.maximize();
+
+  //win.webContents.setZoomFactor(2);
   console.log("BrowserWindow created, maximized, and index.html loaded.");
   return win;
 };
@@ -58,6 +60,7 @@ app.whenReady().then(() => {
   if (presetsResult.error) {
     console.log("No presets loaded, showing missing .rgwfuncsrc instructions...");
     win = createWindow();
+
     win.webContents.on("did-finish-load", () => {
       win.webContents.send("show-rgwfuncsrc-missing");
     });

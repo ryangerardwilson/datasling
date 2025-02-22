@@ -1,5 +1,5 @@
 function runAsciiIntro() {
-const dataslingVersion = "0.0.21-1";
+  const dataslingVersion = "0.0.27-1";
 
   // Define the ASCII art in a single string literal.
   const asciiArtString = `

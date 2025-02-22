@@ -43,12 +43,12 @@ function displayResults(data, container) {
 
   const prevButton = document.createElement("button");
   prevButton.textContent = "{previous}";
-  prevButton.className = "py-1 hover:text-green-400 disabled:text-gray-500 text-2xl";
+  prevButton.className = "py-1 hover:text-green-400 disabled:text-gray-500 text-base";
   prevButton.disabled = true; // Disabled on page 0
 
   const nextButton = document.createElement("button");
   nextButton.textContent = "{next}";
-  nextButton.className = "py-1 hover:text-green-400 disabled:text-gray-500 text-2xl";
+  nextButton.className = "py-1 hover:text-green-400 disabled:text-gray-500 text-base";
   nextButton.disabled = rows.length <= 10; // Disabled if ≤10 rows
 
   paginationControls.appendChild(prevButton);
@@ -64,7 +64,7 @@ function displayResults(data, container) {
   tableWrapper.dataset.isExpanded = "false"; // Track expanded state
 
   const table = document.createElement("table");
-  table.className = "table-fixed border-collapse border border-green-500 text-2xl text-green-500";
+  table.className = "table-fixed border-collapse border border-green-500 text-base text-green-500";
 
   const thead = document.createElement("thead");
   thead.className = "bg-black"; // Removed sticky and z-index
@@ -83,7 +83,7 @@ function displayResults(data, container) {
 
     if (meta[headerText] && meta[headerText].type && meta[headerText].type.name) {
       const typeLabel = document.createElement("span");
-      typeLabel.className = "text-lg text-green-300";
+      typeLabel.className = "text-xs text-green-300";
       typeLabel.textContent = meta[headerText].type.name;
       headerTextContainer.appendChild(typeLabel);
     }

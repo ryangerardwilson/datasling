@@ -14,12 +14,12 @@ const createQueryTextEditor = (notebookEl) => {
     inputRow.className = "flex relative w-full";
 
     const lineNumbers = document.createElement("div");
-    lineNumbers.className = "whitespace-pre text-white/20 select-none text-4xl w-8 flex-shrink-0";
+    lineNumbers.className = "whitespace-pre text-white/20 select-none text-xl w-8 flex-shrink-0";
     lineNumbers.textContent = "1";
     inputRow.appendChild(lineNumbers);
 
     const textarea = document.createElement("textarea");
-    textarea.className = "w-full bg-transparent border-none text-green-500 focus:outline-none text-4xl ml-4 resize-none overflow-hidden";
+    textarea.className = "w-full bg-transparent border-none text-green-500 focus:outline-none text-xl ml-4 resize-none overflow-hidden";
     textarea.placeholder = "Type your SQL query here (Ctrl+Enter to run query or open Vim with @vi)...";
     textarea.style.minHeight = "2rem";
     inputRow.appendChild(textarea);

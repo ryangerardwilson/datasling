@@ -11,7 +11,7 @@ function createNewTab(ensureInputCell) {
 
   const tabBar = document.getElementById("tabBar");
   const tabButton = document.createElement("button");
-  tabButton.className = "px-2 py-1 text-4xl border border-green-500/50 bg-black/80 hover:border-green-300/50 hover:bg-green-900/50 text-green-200/50 focus:outline-none font-mono";
+  tabButton.className = "px-2 py-1 text-lg border border-green-500/50 bg-black/80 hover:border-green-300/50 hover:bg-green-900/50 text-green-200/50 focus:outline-none font-mono";
   const title = tabs.length === 0 ? "Tab1" : "New Tab";
   tabButton.textContent = title;
   tabBar.appendChild(tabButton);
@@ -62,9 +62,9 @@ function createHelpTab() {
   });
 
   const helpContent = document.createElement("div");
-  helpContent.className = "bg-black/80 text-green-500 font-mono p-4 rounded text-2xl";
+  helpContent.className = "bg-black/80 text-green-500 font-mono p-4 rounded text-lg";
   helpContent.innerHTML = `
-    <h2 class="text-2xl mb-2">How to Use DataSling</h2>
+    <h2 class="text-lg mb-2">How to Use DataSling</h2>
     <pre class="whitespace-pre-wrap">
 Welcome to DataSling, your SQL query tool!
 
