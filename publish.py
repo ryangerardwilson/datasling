@@ -82,6 +82,66 @@ def update_ascii_intro_js_version(new_version):
     print(f"[INFO] Updated {filename} with version: {new_version}")
 
 ###############################################################################
+# MANAGE font size discrepencies
+###############################################################################
+
+
+def add_html_font_size(font_size="24px"):
+    filename = os.path.join("electron", "index.html")
+    if not os.path.exists(filename):
+        raise FileNotFoundError(f"{filename} not found")
+
+    with open(filename, "r", encoding="utf-8") as f:
+        contents = f.read()
+
+    # Check if style tag exists
+    if "<style>" not in contents:
+        # If no style tag exists, add one with the font-size
+        new_style = f"""<style>
+    html {{
+      font-size: {font_size};
+    }}
+</style>"""
+        updated_contents = re.sub(
+            r'</head>',
+            f'  {new_style}\n  </head>',
+            contents,
+            flags=re.MULTILINE
+        )
+    else:
+        # Check if font-size already exists in an html block
+        if re.search(r'html\s*{[^}]*font-size:[^;]*;', contents):
+            # Update existing font-size
+            updated_contents = re.sub(
+                r'(html\s*{[^}]*font-size:\s*)[^;]+(;[^}]*})',
+                lambda m: m.group(1) + font_size + m.group(2),
+                contents,
+                flags=re.MULTILINE
+            )
+        # If html {} block exists but no font-size
+        elif re.search(r'html\s*{[^}]*}', contents):
+            # Add font-size to existing html block
+            updated_contents = re.sub(
+                r'(html\s*{)',
+                f'\\1\n    font-size: {font_size};',
+                contents,
+                flags=re.MULTILINE
+            )
+        else:
+            # Add new html block with font-size
+            updated_contents = re.sub(
+                r'(<style>)',
+                f'\\1\n  html {{\n    font-size: {font_size};\n  }}',
+                contents,
+                flags=re.MULTILINE
+            )
+
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(updated_contents)
+
+    print(f"[INFO] Set font-size to {font_size} in {filename}")
+
+###############################################################################
 # GET NEW VERSION
 ###############################################################################
 
@@ -199,8 +259,14 @@ def publish_release(version):
         update_package_json_version(version)
         update_ascii_intro_js_version(version)
 
+        print("[INFO] Removing HTML font size for dist")
+        add_html_font_size("14px")
+
         print("[INFO] Running 'npm run make' inside the electron directory...")
         subprocess.check_call("npm run make", shell=True, cwd="electron")
+
+        print("[INFO] Re-adding HTML font size for dev")
+        add_html_font_size("24px")
 
         # The built .deb is now in electron/out/make/deb/x64
         built_debs = glob.glob(os.path.join("electron", "out", "make", "deb", "x64", "datasling_*_amd64.deb"))

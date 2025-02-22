@@ -6,11 +6,13 @@
     <title>DataSling</title>
     <link rel="stylesheet" href="./main.css" />
     <style>
+      html {
+        font-size: 24px;
+      }
       /* Optionally, further hide scrollbars for webkit browsers */
       ::-webkit-scrollbar {
         display: none;
       }
-      /* main.css or index.html <style> */
       .query-text-editor .flex {
         transform-origin: top left; /* Scale from top-left */
         display: flex; /* Ensure flex behavior persists */
@@ -23,7 +25,7 @@
     </style>
   </head>
 
-  <body class="bg-black/80 text-green-500 font-mono p-4 min-h-screen overflow-auto">
+  <body class="bg-black/80 text-green-500 font-mono p-4 min-h-screen text-base overflow-auto">
     <!-- Tab bar container -->
     <div id="tabBar" class="flex space-x-2 mb-4"></div>
 
