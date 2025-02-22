@@ -11,7 +11,7 @@ function createNewTab(ensureInputCell) {
 
   const tabBar = document.getElementById("tabBar");
   const tabButton = document.createElement("button");
-  tabButton.className = "px-3 py-1 text-2xl border border-green-500 rounded hover:bg-green-500 hover:text-black focus:outline-none";
+  tabButton.className = "px-2 py-1 text-4xl border border-green-500/50 bg-black/80 hover:border-green-300/50 hover:bg-green-900/50 text-green-200/50 focus:outline-none font-mono";
   const title = tabs.length === 0 ? "Tab1" : "New Tab";
   tabButton.textContent = title;
   tabBar.appendChild(tabButton);
@@ -43,7 +43,7 @@ function createHelpTab() {
 
   const tabBar = document.getElementById("tabBar");
   const tabButton = document.createElement("button");
-  tabButton.className = "px-3 py-1 text-2xl border border-green-500 rounded hover:bg-green-500 hover:text-black focus:outline-none";
+  tabButton.className = "px-2 py-1 text-lg border border-green-500 bg-black/20 hover:border-green-300 hover:bg-green-900/50 text-green-500 focus:outline-none font-mono";
   const title = "helpDocs";
   tabButton.textContent = title;
   tabBar.appendChild(tabButton);
@@ -61,7 +61,6 @@ function createHelpTab() {
     switchTabTo(index);
   });
 
-  // Add help content
   const helpContent = document.createElement("div");
   helpContent.className = "bg-black/80 text-green-500 font-mono p-4 rounded text-2xl";
   helpContent.innerHTML = `
@@ -73,8 +72,8 @@ Key Commands:
 - Ctrl + T: Open a new query tab
 - Ctrl + H: Open this help tab
 - Ctrl + Left/Right Arrow: Switch between tabs
-- Ctrl + Shift + W: Close the current tab
-- Ctrl + R: Refresh the current tab
+- Ctrl + W: Close the current tab
+- Ctrl + Backspace: Backspace the current tab
 - Ctrl + Enter: Run the query in the current tab
 - Ctrl + +/-: Zoom in/out
 - Tab (in textarea): Insert 2 spaces
@@ -84,8 +83,6 @@ Query Tips:
 - Type "@preset::" to select a database preset (e.g., MSSQL, MySQL)
 - Use multiple presets in one tab by separating queries with blank lines
 - Results can be downloaded as ODS or opened in LibreOffice
-
-Enjoy querying!
     </pre>
   `;
   notebookEl.appendChild(helpContent);
@@ -98,11 +95,11 @@ function switchTabTo(newIndex) {
   if (newIndex < 0 || newIndex >= tabs.length) return;
   tabs.forEach((tab) => {
     tab.notebookEl.style.display = "none";
-    tab.tabButton.classList.remove("bg-green-500", "text-black");
+    tab.tabButton.classList.remove("bg-green-900/50", "text-green-200");
   });
   currentTabIndex = newIndex;
   tabs[newIndex].notebookEl.style.display = "block";
-  tabs[newIndex].tabButton.classList.add("bg-green-500", "text-black");
+  tabs[newIndex].tabButton.classList.add("bg-green-900/50", "text-green-200");
 
   const editor = tabs[newIndex].notebookEl.querySelector(".query-text-editor");
   if (editor) {
@@ -131,7 +128,7 @@ function closeCurrentTab() {
   }
 }
 
-function refreshCurrentTab(ensureInputCell) {
+function backspaceCurrentTab(ensureInputCell) {
   if (currentTabIndex < 0) return;
   const tab = tabs[currentTabIndex];
   tab.notebookEl.innerHTML = "";
@@ -141,6 +138,7 @@ function refreshCurrentTab(ensureInputCell) {
     const txt = editor.querySelector("textarea");
     if (txt) setTimeout(() => txt.focus(), 50);
   }
+  return tab.notebookEl; // Return the modified notebookEl
 }
 
 function updateTabTitle(newTitle) {
@@ -155,10 +153,10 @@ function getCurrentTab() {
 
 module.exports = {
   createNewTab,
-  createHelpTab, // Export the new function
+  createHelpTab,
   switchTab,
   closeCurrentTab,
-  refreshCurrentTab,
+  backspaceCurrentTab,
   updateTabTitle,
   getCurrentTab,
 };

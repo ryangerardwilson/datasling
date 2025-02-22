@@ -3,7 +3,7 @@
 
 const { updateTabTitle } = require("./tabManager");
 
-function registerKeyboardShortcuts({ createNewTab, switchTab, closeCurrentTab, refreshCurrentTab, createHelpTab }) {
+function registerKeyboardShortcuts({ createNewTab, switchTab, closeCurrentTab, backspaceCurrentTab, createHelpTab }) {
   // Zoom in/out for the active query editor's inputRow (textarea + line numbers)
   document.addEventListener("keydown", (e) => {
     const activeInputRow = document.querySelector(".tab.active .query-text-editor .flex") || document.querySelector(".query-text-editor .flex"); // Fallback selector
@@ -60,19 +60,19 @@ function registerKeyboardShortcuts({ createNewTab, switchTab, closeCurrentTab, r
     }
   });
 
-  // Close current tab with Ctrl+Shift+W
+  // Close current tab with Ctrl+W
   document.addEventListener("keydown", (e) => {
-    if (e.ctrlKey && e.shiftKey && (e.key === "W" || e.key === "w")) {
+    if (e.ctrlKey && (e.key === "W" || e.key === "w")) {
       e.preventDefault();
       closeCurrentTab();
     }
   });
 
-  // Refresh current tab with Ctrl+R
+  // Backspace current tab with Ctrl+Backspace
   document.addEventListener("keydown", (e) => {
-    if (e.ctrlKey && (e.key === "R" || e.key === "r")) {
+    if (e.ctrlKey && e.key === "Backspace") {
       e.preventDefault();
-      refreshCurrentTab();
+      backspaceCurrentTab();
     }
   });
 
