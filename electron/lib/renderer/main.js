@@ -17,6 +17,7 @@ registerKeyboardShortcuts({
     console.log("[INFO] Creating new tab via keyboard shortcut");
     const notebookEl = createNewTab(createQueryTextEditor);
     const textarea = notebookEl.querySelector("textarea");
+    console.log("[DEBUG] Attaching preset and query listeners to new tab textarea");
     setupPresetListener(textarea, (preset) => console.log(`Preset selected: ${preset}`));
     setupQueryListener(notebookEl.querySelector(".query-text-editor"), textarea);
   },
@@ -26,8 +27,8 @@ registerKeyboardShortcuts({
     console.log("[INFO] Backspacing current tab via keyboard shortcut");
     const notebookEl = backspaceCurrentTab(createQueryTextEditor);
     if (notebookEl) {
-      // Check if notebookEl exists (i.e., there was a current tab)
       const textarea = notebookEl.querySelector("textarea");
+      console.log("[DEBUG] Attaching preset and query listeners to backspaced tab textarea");
       setupPresetListener(textarea, (preset) => console.log(`Preset selected: ${preset}`));
       setupQueryListener(notebookEl.querySelector(".query-text-editor"), textarea);
     }
@@ -39,6 +40,7 @@ window.onload = () => {
   console.log("[INFO] Window loaded. Creating default tab...");
   const notebookEl = createNewTab(createQueryTextEditor);
   const textarea = notebookEl.querySelector("textarea");
+  console.log("[DEBUG] Attaching preset and query listeners to default tab textarea");
   setupPresetListener(textarea, (preset) => console.log(`Preset selected: ${preset}`));
   setupQueryListener(notebookEl.querySelector(".query-text-editor"), textarea);
 };

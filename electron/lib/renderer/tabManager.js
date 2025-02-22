@@ -73,14 +73,20 @@ Key Commands:
 - Ctrl + H: Open this help tab
 - Ctrl + Left/Right Arrow: Switch between tabs
 - Ctrl + W: Close the current tab
-- Ctrl + Backspace: Backspace the current tab
-- Ctrl + Enter: Run the query in the current tab
-- Ctrl + +/-: Zoom in/out
-- Tab (in textarea): Insert 2 spaces
+- Ctrl + Backspace: Backspace the current tab (clears content)
+- Ctrl + Enter: Run the query if no "@vi" is present, or open Vim with "@vi" (see below)
+- Ctrl + +/-: Zoom in/out of the query editor
+- Tab (in textarea): Insert 2 spaces for indentation
+- Shift + Tab (in textarea): Remove 2 spaces from the start of the line (unindent)
 - Ctrl + Shift + Enter (in textarea): Set tab title from selected comment (e.g., "-- My Query")
 
+Vim Integration:
+- Include "@vi" anywhere in your query text (e.g., "SELECT * FROM table @vi") and press Ctrl + Enter to open the full text in Vim.
+- All "@vi" instances are removed before opening Vim.
+- Edit in Vim, save with :wq, and the updated content replaces the textarea content.
+
 Query Tips:
-- Type "@preset::" to select a database preset (e.g., MSSQL, MySQL)
+- Type "@preset::" to select a database preset (e.g., "@preset::MSSQL")
 - Use multiple presets in one tab by separating queries with blank lines
 - Results can be downloaded as ODS or opened in LibreOffice
     </pre>

@@ -8,6 +8,8 @@ const { spawnSync, spawn } = require("child_process");
 const { getConnector } = require("./lib/database/factory");
 const { loadPresets, getPresetByName } = require("./lib/database/presetManager");
 
+app.disableHardwareAcceleration();
+
 const createWindow = () => {
   const winConfig = {
     width: 800,

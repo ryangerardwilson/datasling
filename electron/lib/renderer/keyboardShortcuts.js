@@ -6,7 +6,7 @@ const { updateTabTitle } = require("./tabManager");
 function registerKeyboardShortcuts({ createNewTab, switchTab, closeCurrentTab, backspaceCurrentTab, createHelpTab }) {
   // Zoom in/out for the active query editor's inputRow (textarea + line numbers)
   document.addEventListener("keydown", (e) => {
-    const activeInputRow = document.querySelector(".tab.active .query-text-editor .flex") || document.querySelector(".query-text-editor .flex"); // Fallback selector
+    const activeInputRow = document.querySelector(".tab.active .query-text-editor .flex") || document.querySelector(".query-text-editor .flex");
     if (!activeInputRow) {
       console.log("[DEBUG] No active inputRow found");
       return;
@@ -18,14 +18,14 @@ function registerKeyboardShortcuts({ createNewTab, switchTab, closeCurrentTab, b
     if (e.ctrlKey && (e.key === "+" || e.key === "=")) {
       e.preventDefault();
       console.log("[DEBUG] Zoom in triggered");
-      currentScale = Math.min(3.0, currentScale + 0.2); // Max zoom 3x
+      currentScale = Math.min(3.0, currentScale + 0.2);
       activeInputRow.style.transform = `scale(${currentScale})`;
       activeInputRow.style.transformOrigin = "top left";
       console.log("[DEBUG] New scale (zoom in):", currentScale);
     } else if (e.ctrlKey && e.key === "-") {
       e.preventDefault();
       console.log("[DEBUG] Zoom out triggered");
-      currentScale = Math.max(0.6, currentScale - 0.2); // Min zoom 0.6x
+      currentScale = Math.max(0.6, currentScale - 0.2);
       activeInputRow.style.transform = `scale(${currentScale})`;
       activeInputRow.style.transformOrigin = "top left";
       console.log("[DEBUG] New scale (zoom out):", currentScale);
@@ -76,22 +76,32 @@ function registerKeyboardShortcuts({ createNewTab, switchTab, closeCurrentTab, b
     }
   });
 
-  // Tab key in textarea for indent
+  // Tab and Shift+Tab for indentation
   document.addEventListener("keydown", (e) => {
-    if (e.target && e.target.tagName === "TEXTAREA" && e.key === "Tab") {
+    if (e.target.tagName === "TEXTAREA" && e.key === "Tab") {
       e.preventDefault();
       const textarea = e.target;
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
-      const indent = "  ";
-      textarea.value = textarea.value.substring(0, start) + indent + textarea.value.substring(end);
-      textarea.selectionStart = textarea.selectionEnd = start + indent.length;
+
+      if (e.shiftKey) {
+        const before = textarea.value.substring(0, start);
+        const lineStart = before.lastIndexOf("\n") + 1;
+        if (textarea.value.substring(lineStart, start).startsWith("  ")) {
+          textarea.value = textarea.value.substring(0, lineStart) + textarea.value.substring(lineStart + 2);
+          textarea.selectionStart = textarea.selectionEnd = start - 2;
+        }
+      } else {
+        const indent = "  ";
+        textarea.value = textarea.value.substring(0, start) + indent + textarea.value.substring(end);
+        textarea.selectionStart = textarea.selectionEnd = start + indent.length;
+      }
     }
   });
 
   // Ctrl+Shift+Enter in textarea to update tab title from comment
   document.addEventListener("keydown", (e) => {
-    if (e.target && e.target.tagName === "TEXTAREA" && e.ctrlKey && e.shiftKey) {
+    if (e.target && e.target.tagName === "TEXTAREA" && e.ctrlKey && e.shiftKey && e.key === "Enter") {
       const textarea = e.target;
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
