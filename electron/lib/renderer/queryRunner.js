@@ -1,4 +1,3 @@
-/* lib/renderer/queryRunner.js */
 const { ipcRenderer } = require("electron");
 const { displayResults, downloadODF, setAllColumnsState } = require("./resultsDisplay.js");
 const { exec } = require("child_process");
@@ -49,7 +48,6 @@ const runQuery = async (editor, query) => {
 
     const errorDetails = document.createElement("div");
     errorDetails.className = "text-base text-red-300 mt-1";
-    // errorDetails.textContent = "See console for full stack trace.";
     resultContainer.appendChild(errorDetails);
 
     const actionsErr = document.createElement("div");
@@ -146,11 +144,10 @@ const setupQueryListener = (editor, textarea) => {
       }
       if (!queryText) return;
 
-      // Check if "@vi" is in the chosen text
+      // Check for Vim integration
       if (queryText.includes("@vi")) {
         console.log("[DEBUG] @vi detected with Ctrl+Enter, opening Vim");
         const tempFile = path.join(require("os").tmpdir(), `datasling-${Date.now()}.txt`);
-        // Remove all instances of "@vi" before writing to file
         const vimContent = queryText.replace(/@vi/g, "");
         fs.writeFileSync(tempFile, vimContent);
         const command = process.platform === "win32" ? `start cmd /c vim ${tempFile}` : `x-terminal-emulator -e vim ${tempFile}`;
@@ -159,14 +156,13 @@ const setupQueryListener = (editor, textarea) => {
             console.error("[ERROR] Failed to open Vim:", err);
             return;
           }
-          let lastContent = vimContent; // Track last known content to detect changes
+          let lastContent = vimContent;
           const checkFile = setInterval(() => {
             if (fs.existsSync(tempFile)) {
               try {
                 const newContent = fs.readFileSync(tempFile, "utf8");
                 if (newContent !== lastContent) {
                   console.log("[DEBUG] Temp file content changed, updating textarea");
-                  // Replace the selected portion or full text based on original selection
                   if (start !== end) {
                     textarea.value = textarea.value.substring(0, start) + newContent + textarea.value.substring(end);
                   } else {
@@ -178,13 +174,12 @@ const setupQueryListener = (editor, textarea) => {
               } catch (readErr) {
                 console.error("[ERROR] Reading temp file:", readErr);
                 clearInterval(checkFile);
-                fs.unlinkSync(tempFile); // Clean up on error
+                fs.unlinkSync(tempFile);
               }
             } else {
               console.log("[DEBUG] Temp file deleted, finalizing update");
               clearInterval(checkFile);
               try {
-                // Final check in case Vim deleted the file after saving
                 const finalContent = fs.readFileSync(tempFile, "utf8");
                 if (finalContent !== lastContent) {
                   if (start !== end) {
@@ -195,7 +190,7 @@ const setupQueryListener = (editor, textarea) => {
                   textarea.autoResize();
                 }
               } catch (readErr) {
-                // File likely already deleted, which is fine
+                // File likely already deleted
               } finally {
                 if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
               }
@@ -203,7 +198,7 @@ const setupQueryListener = (editor, textarea) => {
           }, 500);
         });
       } else {
-        // No @vi, treat as a query
+        // Run query with preset handling
         currentPreset = null;
         const lines = queryText.split("\n");
         let segment = "";
@@ -215,7 +210,7 @@ const setupQueryListener = (editor, textarea) => {
               segment = "";
             }
             currentPreset = trimmedLine.replace("@preset::", "").split("\n")[0].trim();
-            console.log(`Preset updated to "${currentPreset}"`);
+            console.log(`[INFO] Preset updated to "${currentPreset}"`);
           } else if (trimmedLine === "") {
             if (segment.trim()) {
               await runQuery(editor, segment.trim());

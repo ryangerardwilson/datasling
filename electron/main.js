@@ -10,6 +10,8 @@ const { loadPresets, getPresetByName } = require("./lib/database/presetManager")
 
 app.disableHardwareAcceleration();
 
+let mainWindow; // Store the main window globally for state handling
+
 const createWindow = () => {
   const winConfig = {
     width: 800,
@@ -22,14 +24,13 @@ const createWindow = () => {
       contextIsolation: false,
     },
   };
-  const win = new BrowserWindow(winConfig);
-  remoteMain.enable(win.webContents);
-  win.loadFile(path.join(__dirname, "index.html"));
-  win.maximize();
+  mainWindow = new BrowserWindow(winConfig);
+  remoteMain.enable(mainWindow.webContents);
+  mainWindow.loadFile(path.join(__dirname, "index.html"));
+  mainWindow.maximize();
 
-  //win.webContents.setZoomFactor(2);
   console.log("BrowserWindow created, maximized, and index.html loaded.");
-  return win;
+  return mainWindow;
 };
 
 const handleWindowClosed = () => {
@@ -85,13 +86,10 @@ ipcMain.handle("get-presets", () => {
 });
 
 // Updated IPC handler to execute a query
-// Notice that we now expect the property "preset" (instead of presetName) from the renderer.
 ipcMain.handle("database-query", async (event, { query, preset }) => {
   if (!presets) throw new Error("Presets not loaded, app should have prompted for .rgwfuncsrc");
 
-  // Use the passed preset name if provided; otherwise, use the default preset.
   const selectedPreset = preset ? getPresetByName(presets, preset) : getDefaultPreset();
-
   if (!selectedPreset) {
     throw new Error("No presets available in ~/.rgwfuncsrc");
   }
@@ -110,23 +108,18 @@ ipcMain.handle("database-query", async (event, { query, preset }) => {
   return queryResult.ok;
 });
 
-// This handler converts the CSV file to an ODS file and returns its path.
+// Handler to convert CSV to ODS
 ipcMain.handle("convert-to-ods", async (event, csvFilePath) => {
   try {
     const outDir = path.dirname(csvFilePath);
-    // Use LibreOffice headless conversion. Adjust the command if needed.
     const conversion = spawnSync("libreoffice", ["--headless", "--convert-to", "ods", csvFilePath, "--outdir", outDir], { stdio: "inherit" });
 
-    // Derive the expected ODS file name.
     const baseName = path.basename(csvFilePath, ".csv");
     const odsFilePath = path.join(outDir, baseName + ".ods");
 
     if (!fs.existsSync(odsFilePath)) {
       throw new Error("Conversion failed. ODS file not found: " + odsFilePath);
     }
-
-    // (Optional) Remove the intermediate CSV file if desired:
-    // fs.unlink(csvFilePath, err => { if(err) console.warn("Failed to delete CSV:", err); });
 
     return odsFilePath;
   } catch (err) {
@@ -135,7 +128,7 @@ ipcMain.handle("convert-to-ods", async (event, csvFilePath) => {
   }
 });
 
-// This handler simply opens an already downloaded ODS file.
+// Handler to open an ODS file
 ipcMain.handle("open-ods", async (event, odsFilePath) => {
   try {
     if (!fs.existsSync(odsFilePath)) {
@@ -149,6 +142,35 @@ ipcMain.handle("open-ods", async (event, odsFilePath) => {
     return { ok: true };
   } catch (err) {
     console.error("Failed to open ODS in LibreOffice Calc:", err);
+    throw err;
+  }
+});
+
+// State preservation handlers
+const stateFilePath = path.join(app.getPath("userData"), "app-state.json");
+
+ipcMain.handle("save-state", async (event, state) => {
+  try {
+    fs.writeFileSync(stateFilePath, JSON.stringify(state, null, 2));
+    console.log("[INFO] Main process: State saved to", stateFilePath);
+    return true;
+  } catch (err) {
+    console.error("[ERROR] Main process: Failed to save state:", err);
+    throw err;
+  }
+});
+
+ipcMain.handle("load-state", async () => {
+  try {
+    if (fs.existsSync(stateFilePath)) {
+      const data = fs.readFileSync(stateFilePath, "utf8");
+      console.log("[INFO] Main process: State loaded from", stateFilePath);
+      return JSON.parse(data);
+    }
+    console.log("[INFO] Main process: No state file found at", stateFilePath);
+    return null;
+  } catch (err) {
+    console.error("[ERROR] Main process: Failed to load state:", err);
     throw err;
   }
 });

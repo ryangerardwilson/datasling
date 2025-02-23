@@ -1,5 +1,5 @@
 function runAsciiIntro() {
-  const dataslingVersion = "0.0.32-1";
+const dataslingVersion = "0.0.33-1";
 
   // Define the ASCII art in a single string literal.
   const asciiArtString = `
@@ -64,7 +64,7 @@ function runAsciiIntro() {
     left: "0",
     width: "100%",
     height: "100%",
-    backgroundColor: "black",
+    // backgroundColor: "black",
     color: "lime", // Set your text color here
     fontFamily: "monospace",
     whiteSpace: "pre",
@@ -74,6 +74,7 @@ function runAsciiIntro() {
     alignItems: "center",
     zIndex: "10000", // Ensure it's on top
   });
+  artContainer.className = "bg-black/90";
   document.body.appendChild(artContainer);
 
   // Create an inner container for the lines.

@@ -1,4 +1,3 @@
-/* lib/renderer/tabManager.js */
 let tabs = [];
 let currentTabIndex = -1;
 
@@ -12,7 +11,10 @@ function createNewTab(ensureInputCell) {
   const tabBar = document.getElementById("tabBar");
   const tabButton = document.createElement("button");
   tabButton.className = "px-2 py-1 text-lg border border-green-500/50 bg-black/80 hover:border-green-300/50 hover:bg-green-900/50 text-green-200/50 focus:outline-none font-mono";
-  const title = tabs.length === 0 ? "Tab1" : "New Tab";
+
+  // Generate title as "Tab" + (number of tabs + 1)
+  const tabNumber = tabs.length + 1;
+  const title = `Tab${tabNumber}`;
   tabButton.textContent = title;
   tabBar.appendChild(tabButton);
 
@@ -74,10 +76,10 @@ Key Commands:
 - Ctrl + Left/Right Arrow: Switch between tabs
 - Ctrl + W: Close the current tab
 - Ctrl + Backspace: Backspace the current tab (clears content)
-- Ctrl + Enter: Run the query if no "@vi" is present, or open Vim with "@vi" (see below)
+- Ctrl + Enter: Run the query if no "@vi" is present, or open Vim with "@vi"
 - Ctrl + +/-: Zoom in/out of the query editor
 - Tab (in textarea): Insert 2 spaces for indentation
-- Shift + Tab (in textarea): Remove 2 spaces from the start of the line (unindent)
+- Shift + Tab (in textarea): Remove 2 spaces from the start of the line
 - Ctrl + Shift + Enter (in textarea): Set tab title from selected comment (e.g., "-- My Query")
 
 Vim Integration:
@@ -144,7 +146,7 @@ function backspaceCurrentTab(ensureInputCell) {
     const txt = editor.querySelector("textarea");
     if (txt) setTimeout(() => txt.focus(), 50);
   }
-  return tab.notebookEl; // Return the modified notebookEl
+  return tab.notebookEl;
 }
 
 function updateTabTitle(newTitle) {
@@ -157,6 +159,166 @@ function getCurrentTab() {
   return currentTabIndex > -1 ? tabs[currentTabIndex] : null;
 }
 
+function getTabsState() {
+  return tabs.map((tab, index) => {
+    const textarea = tab.notebookEl.querySelector(".query-text-editor textarea");
+    const queryText = textarea ? textarea.value : "";
+
+    const resultContainers = tab.notebookEl.querySelectorAll(".result-container");
+    const tableData = Array.from(resultContainers).map((container) => {
+      const titleEl = container.querySelector(".mb-1.text-base.text-green-500");
+      const title = titleEl ? titleEl.textContent : "Untitled";
+      const tableWrapper = container.querySelector(".output table")?.parentElement;
+      const rows = tableWrapper && tableWrapper.dataset.rows ? JSON.parse(tableWrapper.dataset.rows) : [];
+      return { title, rows };
+    });
+
+    return {
+      id: tab.id,
+      title: tab.title,
+      isActive: index === currentTabIndex,
+      queryText,
+      tableData,
+    };
+  });
+}
+
+function restoreTabsState(state, ensureInputCell) {
+  tabs = [];
+  currentTabIndex = -1;
+  const container = document.getElementById("notebookContainer");
+  const tabBar = document.getElementById("tabBar");
+  container.innerHTML = "";
+  tabBar.innerHTML = "";
+
+  state.forEach((tabState, index) => {
+    const notebookEl = document.createElement("div");
+    notebookEl.className = "notebook";
+    container.appendChild(notebookEl);
+
+    const tabButton = document.createElement("button");
+    tabButton.className = "px-2 py-1 text-lg border border-green-500/50 bg-black/80 hover:border-green-300/50 hover:bg-green-900/50 text-green-200/50 focus:outline-none font-mono";
+    tabButton.textContent = tabState.title;
+    tabBar.appendChild(tabButton);
+
+    const tab = {
+      id: tabState.id || Date.now(),
+      title: tabState.title,
+      notebookEl,
+      tabButton,
+    };
+    tabs.push(tab);
+
+    tabButton.addEventListener("click", () => {
+      const idx = tabs.findIndex((t) => t.id === tab.id);
+      switchTabTo(idx);
+    });
+
+    const editor = ensureInputCell(notebookEl);
+    const textarea = editor.querySelector("textarea");
+    if (tabState.queryText) {
+      textarea.value = tabState.queryText;
+      textarea.autoResize();
+    }
+
+    if (tabState.tableData && tabState.tableData.length > 0) {
+      const output = editor.querySelector(".output");
+      const { displayResults, downloadODF, setAllColumnsState } = require("./resultsDisplay.js");
+      const { ipcRenderer } = require("electron");
+
+      tabState.tableData.forEach((table) => {
+        if (table.rows && table.rows.length > 0) {
+          const resultContainer = document.createElement("div");
+          resultContainer.className = "result-container";
+
+          const queryHeader = document.createElement("div");
+          queryHeader.className = "mb-1 text-base text-green-500";
+          queryHeader.textContent = table.title;
+          resultContainer.appendChild(queryHeader);
+
+          output.appendChild(resultContainer);
+          displayResults({ rows: table.rows }, resultContainer);
+
+          const actionsDiv = document.createElement("div");
+          actionsDiv.className = "action-buttons mt-1 space-x-2 text-base flex";
+
+          const downloadButton = document.createElement("button");
+          downloadButton.textContent = "{download}";
+          downloadButton.className = "text-green-500 hover:text-green-400";
+          downloadButton.addEventListener("click", async () => {
+            try {
+              await downloadODF({ rows: table.rows });
+            } catch (err) {
+              console.error("Download ODF failed:", err);
+            }
+          });
+          actionsDiv.appendChild(downloadButton);
+
+          const openButton = document.createElement("button");
+          openButton.textContent = "{open}";
+          openButton.className = "text-green-500 hover:text-green-400";
+          openButton.addEventListener("click", async () => {
+            try {
+              const odsFilePath = await downloadODF({ rows: table.rows });
+              await ipcRenderer.invoke("open-ods", odsFilePath);
+            } catch (err) {
+              console.error("Failed to open ODS:", err);
+            }
+          });
+          actionsDiv.appendChild(openButton);
+
+          const closeButton = document.createElement("button");
+          closeButton.textContent = "{close}";
+          closeButton.className = "text-green-500 hover:text-green-400";
+          closeButton.addEventListener("click", () => resultContainer.remove());
+          actionsDiv.appendChild(closeButton);
+
+          const expandButton = document.createElement("button");
+          expandButton.textContent = "{expand}";
+          expandButton.className = "text-green-500 hover:text-green-400";
+          expandButton.addEventListener("click", () => {
+            const tableEl = resultContainer.querySelector("table");
+            if (tableEl) {
+              setAllColumnsState(tableEl, true);
+              expandButton.style.display = "none";
+              collapseButton.style.display = "inline";
+            }
+          });
+          actionsDiv.appendChild(expandButton);
+
+          const collapseButton = document.createElement("button");
+          collapseButton.textContent = "{collapse}";
+          collapseButton.className = "text-green-500 hover:text-green-400";
+          collapseButton.style.display = "none";
+          collapseButton.addEventListener("click", () => {
+            const tableEl = resultContainer.querySelector("table");
+            if (tableEl) {
+              setAllColumnsState(tableEl, false);
+              collapseButton.style.display = "none";
+              expandButton.style.display = "inline";
+            }
+          });
+          actionsDiv.appendChild(collapseButton);
+
+          resultContainer.appendChild(actionsDiv);
+        }
+      });
+    }
+
+    if (tabState.isActive) {
+      currentTabIndex = index;
+    }
+  });
+
+  if (currentTabIndex >= 0) {
+    switchTabTo(currentTabIndex);
+  }
+}
+
+function getTabs() {
+  return tabs;
+}
+
 module.exports = {
   createNewTab,
   createHelpTab,
@@ -165,4 +327,7 @@ module.exports = {
   backspaceCurrentTab,
   updateTabTitle,
   getCurrentTab,
+  getTabsState,
+  restoreTabsState,
+  getTabs,
 };

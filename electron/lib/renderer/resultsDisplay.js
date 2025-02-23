@@ -37,6 +37,10 @@ function displayResults(data, container) {
   const headers = Object.keys(rows[0]);
   const meta = data.columns || {};
 
+  // Ensure container doesn’t restrict scrolling
+  container.style.maxWidth = "100%"; // Prevent width clipping
+  container.style.overflow = "visible"; // Avoid hidden overflow
+
   // Pagination controls above scrollBox
   const paginationControls = document.createElement("div");
   paginationControls.className = "flex justify-start space-x-2 mb-1 text-green-500"; // Left-aligned
@@ -55,19 +59,25 @@ function displayResults(data, container) {
   paginationControls.appendChild(nextButton);
   container.appendChild(paginationControls);
 
+  // Scrollable container with full width and max-h-1/3
   const scrollBox = document.createElement("div");
-  scrollBox.className = "max-h-[489px] overflow-y-auto overflow-x-scroll w-auto"; // Matches your draft height
+  scrollBox.className = "w-full overflow-x-auto overflow-y-auto";
+  scrollBox.style.position = "relative"; // Ensure scrollBox is a containing block
+  scrollBox.style.maxWidth = "100%"; // Respect container bounds
+  scrollBox.style.minWidth = "0"; // Allow flexibility
 
   const tableWrapper = document.createElement("div");
-  tableWrapper.dataset.rows = JSON.stringify(rows); // Store full data in memory
-  tableWrapper.dataset.currentPage = "0"; // Start at page 0
-  tableWrapper.dataset.isExpanded = "false"; // Track expanded state
+  tableWrapper.dataset.rows = JSON.stringify(rows);
+  tableWrapper.dataset.currentPage = "0";
+  tableWrapper.dataset.isExpanded = "false";
 
   const table = document.createElement("table");
   table.className = "table-fixed border-collapse border border-green-500 text-base text-green-500";
+  table.style.minWidth = "100%"; // Fill container by default
+  table.style.maxWidth = "none"; // Prevent clipping
 
   const thead = document.createElement("thead");
-  thead.className = "bg-black"; // Removed sticky and z-index
+  thead.className = "bg-black";
   const headerRow = document.createElement("tr");
   headers.forEach((headerText) => {
     const th = document.createElement("th");
@@ -201,11 +211,23 @@ function setAllColumnsState(table, isExpanded) {
 
   tableWrapper.dataset.isExpanded = isExpanded;
 
-  // Adjust table width dynamically based on number of columns
-  const tableWidth = isExpanded ? `${headers.length * 400}px` : "auto";
-  table.style.width = tableWidth;
+  // Set table dimensions to ensure scrolling in expanded state
+  if (isExpanded) {
+    const tableWidth = headers.length * 400 + 14;
+    table.style.width = `${tableWidth}px`; // Explicit width for expanded mode
+    table.style.minWidth = "100%"; // Fill container if narrower
+    table.style.maxWidth = "none"; // Prevent clipping
+    tableWrapper.style.minWidth = `${tableWidth}px`; // Ensure wrapper matches table width
+    tableWrapper.style.maxWidth = "none"; // Allow full expansion
+  } else {
+    table.style.width = "auto"; // Contracted state adapts to content
+    table.style.minWidth = "100%"; // Fill container
+    table.style.maxWidth = "none"; // Prevent clipping
+    tableWrapper.style.minWidth = "0"; // Reset wrapper
+    tableWrapper.style.maxWidth = "none"; // No restriction
+  }
 
-  // Update thead columns (no sticky behavior)
+  // Update thead columns
   const thElements = table.querySelectorAll("thead th");
   thElements.forEach((th) => {
     th.className = isExpanded ? expandedOuter : contractedOuter;
@@ -213,6 +235,13 @@ function setAllColumnsState(table, isExpanded) {
 
   // Re-render tbody with current page
   renderTableBody(tbody, rows, headers, currentPage * 10, (currentPage + 1) * 10, isExpanded);
+
+  // Ensure scrollBox supports full scrolling
+  const scrollBox = tableWrapper.parentElement;
+  scrollBox.style.maxHeight = "33vh"; // Reinforce max-h-1/3
+  scrollBox.style.overflowX = "auto"; // Reinforce horizontal scrolling
+  scrollBox.style.maxWidth = "100%"; // Respect container bounds
+  // scrollBox.style.overflowX = "scroll";    // Uncomment for debugging to force scrollbar
 }
 
 module.exports = { displayResults, downloadODF, setAllColumnsState };

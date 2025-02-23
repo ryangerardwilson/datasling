@@ -1,4 +1,3 @@
-/* lib/renderer/queryTextEditor.js */
 const { ipcRenderer } = require("electron");
 
 const createQueryTextEditor = (notebookEl) => {
