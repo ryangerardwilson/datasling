@@ -19,7 +19,7 @@ HEADING_COLOR = '\033[92m'  # Bright green (non-bold) for headings and subheadin
 CONTENT_COLOR = '\033[94m'  # Bright blue (non-bold) for content like DataFrames, query text, etc.
 RESET_COLOR = '\033[0m'     # Reset to default terminal color
 
-VERSION = "0.0.42-1"
+VERSION = "0.0.43-1"
 
 # Define ASCII_ART without formatting
 ASCII_ART = r"""

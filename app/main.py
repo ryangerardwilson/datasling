@@ -12,6 +12,12 @@ from modules.file_utils import get_sql_files, check_df_conflicts
 # Import the original historic function under a different name
 from modules.history_manager import historic as historic_func
 
+
+# Wrapper function that uses historic_func, not historic (to avoid recursion)
+def historic_wrapper(df_names=None, *args, **kwargs):
+    return historic_func(df_names, global_namespace)
+
+
 if __name__ == "__main__":
     formatted_art = f"{HEADING_COLOR}{ASCII_ART}                        Version {VERSION}{RESET_COLOR}"
     typewriter_print(formatted_art)
@@ -56,9 +62,6 @@ if __name__ == "__main__":
     global_namespace['clear_history'] = clear_history
     global_namespace['run'] = lambda: run_local(original_filepaths, global_namespace, save_history_entry)
 
-    # Updated wrapper function that uses historic_func, not historic (to avoid recursion)
-    def historic_wrapper(df_names=None, *args, **kwargs):
-        return historic_func(df_names, global_namespace)
     global_namespace['historic'] = historic_wrapper
     global_namespace['ORIGINAL_FILEPATHS'] = original_filepaths
 

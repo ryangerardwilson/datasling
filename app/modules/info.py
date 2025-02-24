@@ -10,14 +10,16 @@ def info():
 {HEADING_COLOR}================================ INFO =================================={RESET_COLOR}
 
 {HEADING_COLOR}Overview:{RESET_COLOR}
-{CONTENT_COLOR}DataSling is a Python-based tool for processing SQL queries from .sql files,
-executing them against predefined data sources, and managing the results
-as pandas DataFrames in an interactive shell.{RESET_COLOR}
+{CONTENT_COLOR}DataSling is a Python-based tool for processing SQL queries from .sql
+files, executing them against predefined data sources,
+and managing the results as pandas DataFrames in an
+interactive shell.{RESET_COLOR}
 
 {HEADING_COLOR}Quickstart/ Step I{RESET_COLOR}
-{CONTENT_COLOR}Define your database presets in a ~/.rgwfuncsrc file. See the rgwfuncs
-documentation (https://pypi.org/project/rgwfuncs/) for more info
-about available database types.
+{CONTENT_COLOR}Define your database presets in a ~/.rgwfuncsrc
+file. See the rgwfuncs documentation
+(https://pypi.org/project/rgwfuncs/) for more info about
+available database types.
     {{
       "db_presets" : [
         {{
@@ -39,8 +41,9 @@ about available database types.
     }}{RESET_COLOR}
 
 {HEADING_COLOR}Quickstart/ Step II{RESET_COLOR}
-{CONTENT_COLOR}Create one or more .sql files containing your SQL queries in the below format,
-using 'df_name@preset::preset_name' directive to define DataFrame name and preset.
+{CONTENT_COLOR}Create one or more .sql files containing your SQL
+queries in the below format, using 'df_name@preset::preset_name'
+directive to define DataFrame name and preset.
 
     /* Getting table1 data */
     df1@preset::redshift
@@ -55,11 +58,14 @@ using 'df_name@preset::preset_name' directive to define DataFrame name and prese
     datasling [--historic] [<sql_file_or_directory>...]
 
     Examples:
-    datasling                     # Process all .sql files in current directory
+    datasling                     # Process all .sql files in
+                                  # current directory
     datasling queries.sql         # Process a single file
     datasling dir1 queries.sql    # Process multiple files/directories
-    datasling --historic          # Use most recent historic data for all .sql files in current directory
-    datasling --historic q.sql    # Use most recent historic data for specified file
+    datasling --historic          # Use most recent historic data
+                                  # for all .sql files in current directory
+    datasling --historic q.sql    # Use most recent historic data for
+                                  # specified file
 
 {HEADING_COLOR}Explore Utilities{RESET_COLOR}
 {CONTENT_COLOR}The following utilities are available in the interactive shell:
@@ -67,16 +73,22 @@ using 'df_name@preset::preset_name' directive to define DataFrame name and prese
 - open(df_name): Open DataFrame in LibreOffice Calc
 - history(n): Show last n query history entries. Defaults to 10.
 - clear_history(): Clear all query history
-- run(): Re-run all original SQL files (respects --historic flag from initial run)
-- historic(["df1","df2"]): Reload all (if no args) or specified DataFrames from history
+- run(): Re-run all original SQL files (respects --historic flag
+  from initial run)
+- historic(["df1","df2"]): Reload all (if no args) or specified
+  DataFrames from history
 - info(): Show this documentation
 
 {HEADING_COLOR}Tips{RESET_COLOR}
 {CONTENT_COLOR}- Only files with .sql extension will be processed
-- If no arguments are provided, all .sql files in the current directory are processed
-- DataFrame names must be unique across all processed files (conflicts will prevent execution, ignored in historic mode)
-- Use --historic flag to load the most recent saved version of DataFrames instead of running queries
-- Use historic() in shell to reload DataFrames from history at any time
+- If no arguments are provided, all .sql files in the current
+  directory are processed
+- DataFrame names must be unique across all processed files
+  (conflicts will prevent execution, ignored in historic mode)
+- Use --historic flag to load the most recent saved version of
+  DataFrames instead of running queries
+- Use historic() in shell to reload DataFrames from history at
+  any time
 - Use comments (--) to organize your SQL files
 - Query inputs and outputs are copied to clipboard with the print
   of the query df, or error message (in case execution failed)
