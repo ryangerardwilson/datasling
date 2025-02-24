@@ -68,6 +68,7 @@ using 'df_name@preset::preset_name' directive to define DataFrame name and prese
 - history(n): Show last n query history entries. Defaults to 10.
 - clear_history(): Clear all query history
 - run(): Re-run all original SQL files (respects --historic flag from initial run)
+- historic(["df1","df2"]): Reload all (if no args) or specified DataFrames from history
 - info(): Show this documentation
 
 {HEADING_COLOR}Tips{RESET_COLOR}
@@ -75,6 +76,7 @@ using 'df_name@preset::preset_name' directive to define DataFrame name and prese
 - If no arguments are provided, all .sql files in the current directory are processed
 - DataFrame names must be unique across all processed files (conflicts will prevent execution, ignored in historic mode)
 - Use --historic flag to load the most recent saved version of DataFrames instead of running queries
+- Use historic() in shell to reload DataFrames from history at any time
 - Use comments (--) to organize your SQL files
 - Query inputs and outputs are copied to clipboard with the print
   of the query df, or error message (in case execution failed)

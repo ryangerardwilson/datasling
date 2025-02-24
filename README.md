@@ -99,6 +99,9 @@ After running your queries, DataSling opens an interactive shell where you can u
     # Re-run all original SQL files (this respects any --historic flag used during the initial run).
     run()
 
+    # Reload all (if no args) or specified DataFrames from history
+    historic(["df1","df2", ...]): Reload all (if no args) or specified DataFrames from history
+
     # Display detailed instructions and documentation.
     info()
 

@@ -85,6 +85,31 @@ def get_historic_df(df_name):
     return None, None, None, None
 
 
+def historic(df_names=None):
+    """Reload DataFrames from their most recent history entries.
+
+    Args:
+        df_names (list, optional): List of DataFrame names to reload. If None, reloads all from original files.
+    """
+    global_namespace = globals()
+    if df_names is None:
+        # Reload all DataFrames from original files
+        all_queries = []
+        for filepath in global_namespace.get('ORIGINAL_FILEPATHS', []):
+            all_queries.extend(collect_queries(filepath))
+        df_names = [q[0] for q in all_queries]
+
+    for df_name in df_names:
+        df, preset, query, timestamp = get_historic_df(df_name)
+        if df is not None:
+            global_namespace[df_name] = df
+            print(f"{HEADING_COLOR}Reloaded historic {df_name} (preset: {preset}, timestamp: {timestamp}):{RESET_COLOR}")
+            print(f"{CONTENT_COLOR}{df}{RESET_COLOR}")
+            print()
+        else:
+            print(f"{HEADING_COLOR}Warning:{RESET_COLOR} {CONTENT_COLOR}No historic data found for {df_name}{RESET_COLOR}")
+
+
 def process_query(query, preset, result_dict, df_name, start_time_dict, end_time_dict):
     try:
         start_time = time.time()
@@ -98,7 +123,6 @@ def process_query(query, preset, result_dict, df_name, start_time_dict, end_time
 
 
 def process_all_queries(filepaths, global_namespace, save_callback, historic=False):
-    # Collect all queries from all files
     all_queries = []
     for filepath in filepaths:
         queries = collect_queries(filepath)
@@ -107,7 +131,6 @@ def process_all_queries(filepaths, global_namespace, save_callback, historic=Fal
     if not all_queries:
         raise ValueError("No valid SQL queries found in any file.")
 
-    # Process queries
     threads = []
     results = {}
     start_times = {}
@@ -118,8 +141,8 @@ def process_all_queries(filepaths, global_namespace, save_callback, historic=Fal
             df, hist_preset, hist_query, timestamp = get_historic_df(df_name)
             if df is not None:
                 results[df_name] = df
-                start_times[df_name] = time.time()  # Using current time as a placeholder
-                end_times[df_name] = time.time()    # Same, as no actual query execution
+                start_times[df_name] = time.time()
+                end_times[df_name] = time.time()
                 print(f"{HEADING_COLOR}Loaded historic {df_name} (preset: {hist_preset}, timestamp: {timestamp}):{RESET_COLOR}")
                 print(f"{CONTENT_COLOR}{df}{RESET_COLOR}")
                 print()
@@ -135,7 +158,6 @@ def process_all_queries(filepaths, global_namespace, save_callback, historic=Fal
             threads.append(thread)
             thread.start()
 
-        # Display running status
         active_threads = threads.copy()
         while active_threads:
             current_time = time.time()
@@ -165,7 +187,6 @@ def process_all_queries(filepaths, global_namespace, save_callback, historic=Fal
             time.sleep(0.1)
             active_threads = [t for t in active_threads if t.is_alive()]
 
-        # Print final status
         final_status = []
         for df_name, _, _ in all_queries:
             if df_name in start_times and df_name in end_times:
@@ -177,9 +198,8 @@ def process_all_queries(filepaths, global_namespace, save_callback, historic=Fal
         for thread in threads:
             thread.join()
 
-    # Process results for non-historic mode or handle historic mode output
     for df_name in results:
-        if not historic or isinstance(results[df_name], str):  # For historic mode, skip detailed output if loaded
+        if not historic or isinstance(results[df_name], str):
             qindex = [q[0] for q in all_queries].index(df_name)
             query_tuple = all_queries[qindex]
             query_text = query_tuple[2]
@@ -197,7 +217,7 @@ def process_all_queries(filepaths, global_namespace, save_callback, historic=Fal
                 except FileNotFoundError:
                     print(f"{HEADING_COLOR}Clipboard Error:{RESET_COLOR} {CONTENT_COLOR}xclip not found. Please install xclip.{RESET_COLOR}")
                 save_callback(df_name, query_tuple[1], query_text, None)
-            elif not historic:  # Only do this detailed output for non-historic mode
+            elif not historic:
                 global_namespace[df_name] = results[df_name]
                 load_msg = f"{HEADING_COLOR}Loaded {df_name} (preset: {query_tuple[1]}, {elapsed_time:.2f}s):{RESET_COLOR}"
                 typewriter_print(load_msg)
@@ -218,7 +238,7 @@ def process_all_queries(filepaths, global_namespace, save_callback, historic=Fal
                     print(f"{HEADING_COLOR}Clipboard Error:{RESET_COLOR} {CONTENT_COLOR}xclip not found. Please install xclip.{RESET_COLOR}")
 
                 save_callback(df_name, query_tuple[1], query_text, results[df_name])
-        else:  # Historic mode with successful load
+        else:
             global_namespace[df_name] = results[df_name]
 
 
@@ -227,7 +247,6 @@ if __name__ == "__main__":
     typewriter_print(formatted_art)
     print()
 
-    # Check for --historic flag
     args = sys.argv[1:]
     historic_mode = '--historic' in args
     if historic_mode:
@@ -245,7 +264,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     conflicts = check_df_conflicts(original_filepaths)
-    if conflicts and not historic_mode:  # Skip conflict check in historic mode
+    if conflicts and not historic_mode:
         sys.stderr.write(f"{HEADING_COLOR}Error: Conflicting DataFrame names found:{RESET_COLOR}\n")
         for filepath, df_names in conflicts.items():
             sys.stderr.write(f"{CONTENT_COLOR}{filepath}: {', '.join(sorted(df_names))}{RESET_COLOR}\n")
@@ -266,6 +285,7 @@ if __name__ == "__main__":
     global_namespace['history'] = history
     global_namespace['clear_history'] = clear_history
     global_namespace['run'] = lambda: run_local(original_filepaths)
+    global_namespace['historic'] = historic  # Add historic function to shell
     global_namespace['ORIGINAL_FILEPATHS'] = original_filepaths
 
     try:
