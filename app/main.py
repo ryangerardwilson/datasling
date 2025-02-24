@@ -47,7 +47,7 @@ if __name__ == "__main__":
     try:
         animate_loading("Initializing query run...")     
         process_sql_file(original_filepath, global_namespace, save_history_entry)
-        interactive_shell(global_namespace, shell_color=CONTENT_COLOR)
+        interactive_shell(global_namespace)
     except Exception as e:
         sys.stderr.write(f"{HEADING_COLOR}Error:{RESET_COLOR} {CONTENT_COLOR}{str(e)}{RESET_COLOR}\n")
         sys.exit(1)
