@@ -31,7 +31,6 @@ if __name__ == "__main__":
         info()  # Execute info() directly when no arguments are provided
         sys.exit(0)  # Exit with success code since we provided info
     else:
-        # Only print the help message when arguments are provided
         typewriter_print(f"{CONTENT_COLOR}[INFO] Need help? Execute 'info()' to see the quickstart.{RESET_COLOR}")
         print()
 
@@ -44,3 +43,14 @@ if __name__ == "__main__":
     global_namespace['clear_history'] = clear_history
     global_namespace['run'] = lambda: run_local(original_filepath)
     global_namespace['ORIGINAL_FILEPATH'] = original_filepath
+
+    try:
+        animate_loading("Initializing query run...")     
+        process_sql_file(original_filepath, global_namespace, save_history_entry)
+        interactive_shell(global_namespace, shell_color=CONTENT_COLOR)
+    except Exception as e:
+        sys.stderr.write(f"{HEADING_COLOR}Error:{RESET_COLOR} {CONTENT_COLOR}{str(e)}{RESET_COLOR}\n")
+        sys.exit(1)
+
+
+

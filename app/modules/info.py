@@ -7,7 +7,7 @@ def info():
     Display detailed usage instructions for the DataSling application.
     """
     instructions = f"""
-{HEADING_COLOR}================================= INFO ==================================={RESET_COLOR}
+{HEADING_COLOR}================================ INFO =================================={RESET_COLOR}
 
 {HEADING_COLOR}Overview:{RESET_COLOR}
 {CONTENT_COLOR}DataSling is a Python-based tool for processing SQL queries from a file,
@@ -52,8 +52,9 @@ in df1 and df2, respectively.
     df2@preset::snowflake
     SELECT * FROM table2 WHERE date > '2023-01-01'
 
-The below syntax would store the query results in df1 and df2, respectively.
-Further, content inside /* ... */ will not be evaluated.{RESET_COLOR}
+The below syntax would store the query results in df1 and df2, 
+respectively. Further, content inside /* ... */ will not be 
+evaluated.{RESET_COLOR}
 
 {HEADING_COLOR}Quickstart/ Step III{RESET_COLOR}
 {CONTENT_COLOR}Invoke datasling against your file.
@@ -70,9 +71,9 @@ Further, content inside /* ... */ will not be evaluated.{RESET_COLOR}
 
 {HEADING_COLOR}Tips{RESET_COLOR}
 {CONTENT_COLOR}- Use comments (--) to organize your SQL file
-- Query inputs and outputs are copied to clipboard with the print of the
-  query df, or error message (in case execution failed). You can paste
-  this into your AI tool of choice for quick debugging.
+- Query inputs and outputs are copied to clipboard with the print 
+  of the query df, or error message (in case execution failed). You 
+  can paste this into your AI tool of choice for quick debugging.
 - Check history() for past query results
 - Use open() to explore large DataFrames externally
 - History is limited to last 40 entries (older entries auto-deleted){RESET_COLOR}
