@@ -1,5 +1,8 @@
 *.log
 *.swp
+*.sql
+app/q
+app/q2
 **/__pycache__
 app/q
 debian/version_build_folders/*

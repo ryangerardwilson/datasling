@@ -9,6 +9,52 @@ from modules.config import HEADING_COLOR, CONTENT_COLOR, RESET_COLOR
 from modules.ui import typewriter_print
 from rgwfuncs import load_data_from_query
 
+
+def collect_queries(filepath):
+    """Collect queries from a file without executing them."""
+    def remove_multiline_comments(content):
+        return re.sub(r'/\*.*?\*/', '', content, flags=re.DOTALL)
+
+    with builtins.open(filepath, 'r') as f:
+        content = f.read()
+
+    content = remove_multiline_comments(content)
+    lines = content.splitlines()
+
+    queries = []
+    current_query = []
+    current_df_name = None
+    current_preset = None
+
+    for line in lines:
+        line = line.rstrip()
+        if not line or line.startswith("--"):
+            if current_query and current_df_name and current_preset:
+                queries.append((current_df_name, current_preset, "\n".join(current_query)))
+                current_query = []
+                current_df_name = None
+                current_preset = None
+            continue
+
+        directive_match = re.match(r'(\w+)@preset::(\w+)', line)
+        if directive_match:
+            if current_query and current_df_name and current_preset:
+                queries.append((current_df_name, current_preset, "\n".join(current_query)))
+                current_query = []
+            current_df_name = directive_match.group(1)
+            current_preset = directive_match.group(2)
+        elif current_df_name and current_preset:
+            current_query.append(line)
+
+    if current_query and current_df_name and current_preset:
+        queries.append((current_df_name, current_preset, "\n".join(current_query)))
+
+    if not queries:
+        raise ValueError(f"No valid SQL queries found in {filepath}")
+
+    return queries
+
+
 def process_sql_file(filepath, global_namespace, save_callback):
     def remove_multiline_comments(content):
         return re.sub(r'/\*.*?\*/', '', content, flags=re.DOTALL)
@@ -19,10 +65,10 @@ def process_sql_file(filepath, global_namespace, save_callback):
             start_time_dict[df_name] = start_time
             df = load_data_from_query(preset, query)
             result_dict[df_name] = df
-            end_time_dict[df_name] = time.time()  # Store completion time
+            end_time_dict[df_name] = time.time()
         except Exception as e:
             result_dict[df_name] = f"Error executing query: {str(e)}"
-            end_time_dict[df_name] = time.time()  # Store completion time even on error
+            end_time_dict[df_name] = time.time()
 
     with builtins.open(filepath, 'r') as f:
         content = f.read()
@@ -64,46 +110,42 @@ def process_sql_file(filepath, global_namespace, save_callback):
     threads = []
     results = {}
     start_times = {}
-    end_times = {}  # New dictionary to store completion times
+    end_times = {}
 
     for df_name, preset, query in queries:
         thread = threading.Thread(target=process_query, args=(query, preset, results, df_name, start_times, end_times))
         threads.append(thread)
         thread.start()
 
-    # Display running status until all queries complete
     active_threads = threads.copy()
     while active_threads:
         current_time = time.time()
         running_status = []
         completed_status = []
-        
+
         for df_name, _, _ in queries:
             if df_name in start_times:
                 if df_name in end_times:
-                    # Use stored end time for completed queries
                     elapsed = end_times[df_name] - start_times[df_name]
                     completed_status.append(f"'{df_name}': {elapsed:.2f}s (done)")
                 else:
-                    # Use current time for running queries
                     elapsed = current_time - start_times[df_name]
                     running_status.append(f"'{df_name}': {elapsed:.2f}s")
-        
+
         status_parts = []
         if running_status:
             status_parts.append(f"Running: {', '.join(running_status)}")
         if completed_status:
             status_parts.append(f"Completed: {', '.join(completed_status)}")
-        
+
         if status_parts:
             status_line = f"\r{CONTENT_COLOR}{'; '.join(status_parts)}{RESET_COLOR}"
             sys.stdout.write(status_line)
             sys.stdout.flush()
-        
-        time.sleep(0.1)  # Update every 100ms
+
+        time.sleep(0.1)
         active_threads = [t for t in active_threads if t.is_alive()]
 
-    # Print final status on a new line
     final_status = []
     for df_name, _, _ in queries:
         if df_name in start_times and df_name in end_times:
