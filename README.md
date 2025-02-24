@@ -2,24 +2,20 @@
 
 A tool for processing SQL queries from a file, executing them against predefined data sources, and managing the results as pandas DataFrames in an interactive shell.
 
-## 1. Prerequisites
-
-    Ubuntu 24.04 LTS
-
-## 2. Installation/ Upgrade to Latest Version
+## 1. Installation/ Upgrade to Latest Version
 
     bash -c "sh <(curl -fsSL https://files.ryangerardwilson.com/datasling/install.sh)"
 
-## 3. Subsequent Updates
+## 2. Subsequent Updates
 
     sudo apt update
     sudo apt install --only-upgrade datasling
 
-## 4. Usage
+## 3. Usage
 
-### 4.1. Quickstart
+### 3.1. Quickstart
 
-#### 4.1.1. Step I
+#### 3.1.1. Step I
 
 Define your database presets in a ~/.rgwfuncsrc file. See the rgwfuncs documentation (https://pypi.org/project/rgwfuncs/) for more info  about available database types.
 
@@ -43,7 +39,7 @@ Define your database presets in a ~/.rgwfuncsrc file. See the rgwfuncs documenta
         }
     }
 
-#### 4.1.2. Step II
+#### 3.1.2. Step II
 
 Create a file, containing your sql queries in the below format, using `df_name@preset::preset_name` directive to define DataFrame name and  preset. For instance, the below syntax would store the query results in df1 and df2, respectively.
 
@@ -57,13 +53,13 @@ Create a file, containing your sql queries in the below format, using `df_name@p
 
 The below syntax would store the query results in df1 and df2, respectively. Further, content inside /* ... */ will not be evaluated.
 
-#### 4.1.3. Step III
+#### 3.1.3. Step III
 
 Invoke datasling against your file.
 
     datasling <your_file>
 
-### 4.2 Utilities
+### 3.2 Utilities
 
 The following utilities are available in the interactive shell:
 
@@ -73,7 +69,7 @@ The following utilities are available in the interactive shell:
 - `run()`: Re-run the original SQL file
 - `info()`: Show this documentation
 
-### 4.3. Tips
+### 3.3. Tips
 - Use comments (--) to organize your SQL file
 - Query inputs and outputs are copied to clipboard with the print of the 
   query df, or error message (in case execution failed). You can paste 
@@ -82,7 +78,7 @@ The following utilities are available in the interactive shell:
 - Use open() to explore large DataFrames externally
 - History is limited to last 40 entries (older entries auto-deleted)
 
-## 5. License
+## 4. License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
