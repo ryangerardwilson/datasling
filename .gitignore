@@ -1,8 +1,7 @@
-electron/node_modules
-electron/out
-electron/logs
 *.log
 *.swp
+**/__pycache__
+app/q
 debian/version_build_folders/*
 debian/version_debs/*
 debian/dists/*

@@ -1,6 +1,6 @@
 # Datasling
 
-A minimalistic SQL-querying GUI tool, sans inherent ugliness of commercial software.
+A tool for processing SQL queries from a file, executing them against predefined data sources, and managing the results as pandas DataFrames in an interactive shell.
 
 ## 1. Prerequisites
 
@@ -17,25 +17,70 @@ A minimalistic SQL-querying GUI tool, sans inherent ugliness of commercial softw
 
 ## 4. Usage
 
-Simply run the below command.
+### 4.1. Quickstart
 
-    datasling
+#### 4.1.1. Step I
 
-Then query your databases.
+Define your database presets in a ~/.rgwfuncsrc file. See the rgwfuncs documentation (https://pypi.org/project/rgwfuncs/) for more info  about available database types.
 
-    @preset::<PRESET_1_NAME>
-    select top 10 * from t1;
+    {
+      "db_presets" : [
+        {
+          "name": "redshift",
+          "db_type": "mssql",
+          "host": "YOUR_HOST",
+          "username": "YOUR_USERNAME",
+          "password": "YOUR_PASSWORD",
+          "database": "YOUR_DATABASE"
+        },
+        {
+          "name": "snowflake",
+          "db_type": "mysql",
+          "host": "YOUR_HOST",
+          "username": "YOUR_USERNAME",
+          "password": "YOUR_PASSWORD",
+          "database": "YOUR_DATABASE"
+        }
+    }
 
-    select top 10 * from t2;
+#### 4.1.2. Step II
 
-    select top 10 * from t3;
+Create a file, containing your sql queries in the below format, using `df_name@preset::preset_name` directive to define DataFrame name and  preset. For instance, the below syntax would store the query results in df1 and df2, respectively.
 
-    @preset::<PRESET_2_NAME>
-    select top 10 * from t4;
+    /* Getting table1 data */
+    df1@preset::redshift
+    SELECT * FROM table1 LIMIT 10
+  
+    /* Getting table2 data */
+    df2@preset::snowflake
+    SELECT * FROM table2 WHERE date > '2023-01-01'
 
-    select top 10 * from t5;
+The below syntax would store the query results in df1 and df2, respectively. Further, content inside /* ... */ will not be evaluated.
 
-    select top 10 * from t6;
+#### 4.1.3. Step III
+
+Invoke datasling against your file.
+
+    datasling <your_file>
+
+### 4.2 Utilities
+
+The following utilities are available in the interactive shell:
+
+- `open(df_name)`: Open DataFrame in LibreOffice Calc
+- `history(n)`: Show last n query history entries. Defaults to 10.
+- `clear_history()`: Clear all query history
+- `run()`: Re-run the original SQL file
+- `info()`: Show this documentation
+
+### 4.3. Tips
+- Use comments (--) to organize your SQL file
+- Query inputs and outputs are copied to clipboard with the print of the 
+  query df, or error message (in case execution failed). You can paste 
+  this into your AI tool of choice for quick debugging.
+- Check history() for past query results
+- Use open() to explore large DataFrames externally
+- History is limited to last 40 entries (older entries auto-deleted)
 
 ## 5. License
 
