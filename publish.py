@@ -5,6 +5,7 @@ It assumes:
   • The Python app is located in the 'app' directory
   • A remote APT repository tree is stored on your VM
   • Requirements are generated dynamically based on app imports without strict versioning
+  • Run this script in a virtual environment where dependencies (e.g., colorama) are installed
 
 All published files will be placed under:
   /home/rgw/Apps/frontend-sites/files.ryangerardwilson.com/datasling
@@ -281,7 +282,7 @@ Description: Datasling - A Python-based SQL query processor
         # Create executable script
         bin_script = os.path.join(usr_bin_dir, "datasling")
         script_content = """#!/bin/bash
-python3 /usr/lib/datasling/app/main.py "$@"
+PYTHONPATH=/usr/lib/datasling/site-packages python3 /usr/lib/datasling/app/main.py "$@"
 """
         with open(bin_script, "w", encoding="utf-8") as f:
             f.write(script_content)
@@ -301,6 +302,7 @@ python3 /usr/lib/datasling/app/main.py "$@"
         try:
             subprocess.check_call(pip_cmd)
             print(f"[INFO] Installed dependencies to {usr_lib_dir}/site-packages")
+            print(f"[DEBUG] Site-packages contents: {os.listdir(os.path.join(usr_lib_dir, 'site-packages'))}")
         except subprocess.CalledProcessError as e:
             print(f"[ERROR] Failed to install dependencies: {e}")
             raise
@@ -332,8 +334,8 @@ python3 /usr/lib/datasling/app/main.py "$@"
 
         packages_path = os.path.join(apt_binary_dir, "Packages")
         pkg_cmd = ["dpkg-scanpackages", "--multiversion", ".", "overrides.txt"]
-        with open(packages_path, "w", encoding="utf-8") as pf:
-            subprocess.check_call(pkg_cmd, cwd=apt_binary_dir, stdout=pf)
+        with open(packages_path, "w", encoding="utf-8") as f:
+            subprocess.check_call(pkg_cmd, cwd=apt_binary_dir, stdout=f)
         print(f"[INFO] Created Packages file at {packages_path}")
 
         new_lines = []
