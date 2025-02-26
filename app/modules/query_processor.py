@@ -2,7 +2,6 @@ import re
 import sys
 import time
 import threading
-import subprocess
 import io
 import builtins
 from .config import HEADING_COLOR, CONTENT_COLOR, RESET_COLOR
@@ -168,14 +167,6 @@ def process_all_queries(filepaths, global_namespace, save_callback, historic=Fal
             if isinstance(results[df_name], str):
                 error_msg = f"{HEADING_COLOR}Failed to load {df_name} ({elapsed_time:.2f}s):{RESET_COLOR} {CONTENT_COLOR}{results[df_name]}{RESET_COLOR}"
                 typewriter_print(error_msg)
-                error_string = f"Query:\n{query_text}\nError: {results[df_name]}"
-                try:
-                    subprocess.run(['xclip', '-selection', 'clipboard'], input=error_string.encode(), check=True)
-                    print(f"{CONTENT_COLOR}Copied query and error to clipboard.{RESET_COLOR}")
-                except subprocess.CalledProcessError as e:
-                    print(f"{HEADING_COLOR}Clipboard Error:{RESET_COLOR} {CONTENT_COLOR}{str(e)}{RESET_COLOR}")
-                except FileNotFoundError:
-                    print(f"{HEADING_COLOR}Clipboard Error:{RESET_COLOR} {CONTENT_COLOR}xclip not found. Please install xclip.{RESET_COLOR}")
                 save_callback(df_name, query_tuple[1], query_text, None)
             elif not historic:
                 global_namespace[df_name] = results[df_name]
@@ -184,19 +175,6 @@ def process_all_queries(filepaths, global_namespace, save_callback, historic=Fal
                 df_output = f"{CONTENT_COLOR}{results[df_name]}{RESET_COLOR}"
                 print(df_output)
                 print()
-
-                buffer = io.StringIO()
-                print(results[df_name].head(10), file=buffer)
-                df_printed_output = buffer.getvalue()
-                success_string = f"Query:\n{query_text}\nOutput:\n{df_printed_output}"
-
-                try:
-                    subprocess.run(['xclip', '-selection', 'clipboard'], input=success_string.encode(), check=True)
-                except subprocess.CalledProcessError as e:
-                    print(f"{HEADING_COLOR}Clipboard Error:{RESET_COLOR} {CONTENT_COLOR}{str(e)}{RESET_COLOR}")
-                except FileNotFoundError:
-                    print(f"{HEADING_COLOR}Clipboard Error:{RESET_COLOR} {CONTENT_COLOR}xclip not found. Please install xclip.{RESET_COLOR}")
-
                 save_callback(df_name, query_tuple[1], query_text, results[df_name])
         else:
             global_namespace[df_name] = results[df_name]
@@ -204,7 +182,7 @@ def process_all_queries(filepaths, global_namespace, save_callback, historic=Fal
 
 def process_sql_file(filepath, global_namespace, save_callback):
     """Process and execute queries from a single SQL file (legacy function)."""
-    queries = collect_queries(filepath)  # Reuse collect_queries
+    queries = collect_queries(filepath)
 
     threads = []
     results = {}
@@ -264,14 +242,6 @@ def process_sql_file(filepath, global_namespace, save_callback):
         if isinstance(results[df_name], str):
             error_msg = f"{HEADING_COLOR}Failed to load {df_name} ({elapsed_time:.2f}s):{RESET_COLOR} {CONTENT_COLOR}{results[df_name]}{RESET_COLOR}"
             typewriter_print(error_msg)
-            error_string = f"Query:\n{query_text}\nError: {results[df_name]}"
-            try:
-                subprocess.run(['xclip', '-selection', 'clipboard'], input=error_string.encode(), check=True)
-                print(f"{CONTENT_COLOR}Copied query and error to clipboard.{RESET_COLOR}")
-            except subprocess.CalledProcessError as e:
-                print(f"{HEADING_COLOR}Clipboard Error:{RESET_COLOR} {CONTENT_COLOR}{str(e)}{RESET_COLOR}")
-            except FileNotFoundError:
-                print(f"{HEADING_COLOR}Clipboard Error:{RESET_COLOR} {CONTENT_COLOR}xclip not found. Please install xclip.{RESET_COLOR}")
             save_callback(df_name, query_tuple[1], query_text, None)
         else:
             global_namespace[df_name] = results[df_name]
@@ -280,17 +250,4 @@ def process_sql_file(filepath, global_namespace, save_callback):
             df_output = f"{CONTENT_COLOR}{results[df_name]}{RESET_COLOR}"
             print(df_output)
             print()
-
-            buffer = io.StringIO()
-            print(results[df_name].head(10), file=buffer)
-            df_printed_output = buffer.getvalue()
-            success_string = f"Query:\n{query_text}\nOutput:\n{df_printed_output}"
-
-            try:
-                subprocess.run(['xclip', '-selection', 'clipboard'], input=success_string.encode(), check=True)
-            except subprocess.CalledProcessError as e:
-                print(f"{HEADING_COLOR}Clipboard Error:{RESET_COLOR} {CONTENT_COLOR}{str(e)}{RESET_COLOR}")
-            except FileNotFoundError:
-                print(f"{HEADING_COLOR}Clipboard Error:{RESET_COLOR} {CONTENT_COLOR}xclip not found. Please install xclip.{RESET_COLOR}")
-
             save_callback(df_name, query_tuple[1], query_text, results[df_name])

@@ -90,8 +90,6 @@ directive to define DataFrame name and preset.
 - Use historic() in shell to reload DataFrames from history at
   any time
 - Use comments (--) to organize your SQL files
-- Query inputs and outputs are copied to clipboard with the print
-  of the query df, or error message (in case execution failed)
 - Check history() for past query results
 - Use open() to explore large DataFrames externally
 - History is limited to last 40 entries (older entries auto-deleted){RESET_COLOR}
