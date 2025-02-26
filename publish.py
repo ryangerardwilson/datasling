@@ -259,7 +259,7 @@ Version: {version}
 Section: utils
 Priority: optional
 Architecture: amd64
-Depends: python3 (>= 3.6), python3-pip, libreoffice-calc, xclip
+Depends: python3 (>= 3.6), python3-pip, libreoffice-calc
 Maintainer: Your Name <ryangerardwilson@gmail.com>
 Description: Datasling - A Python-based SQL query processor
  Datasling is a tool for processing SQL queries and managing dataframes.
