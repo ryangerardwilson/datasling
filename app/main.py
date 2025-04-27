@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 from rgwfuncs import interactive_shell
-from modules.config import ASCII_ART, HEADING_COLOR, CONTENT_COLOR, RESET_COLOR, VERSION
+from modules.config import ASCII_ART, HEADING_COLOR, CONTENT_COLOR, RESET_COLOR
 from modules.db import init_history_db, save_history_entry, history, clear_history
 from modules.query_processor import run_local, process_all_queries
 from modules.ui import animate_loading, typewriter_print
@@ -19,9 +19,8 @@ def historic_wrapper(df_names=None, *args, **kwargs):
 
 
 if __name__ == "__main__":
-    formatted_art = f"{HEADING_COLOR}{ASCII_ART}                        Version {VERSION}{RESET_COLOR}"
+    formatted_art = f"{HEADING_COLOR}{ASCII_ART}{RESET_COLOR}"
     typewriter_print(formatted_art)
-    print()
 
     args = sys.argv[1:]
     historic_mode = '--historic' in args
