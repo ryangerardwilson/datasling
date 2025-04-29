@@ -1,22 +1,21 @@
-# ~/Apps/datasling/app/modules/info.py
-from modules.config import HEADING_COLOR, CONTENT_COLOR, RESET_COLOR
+from .config import Config
 
+class Info:
+    def __init__(self):
+        self.config = Config()
 
-def info():
-    """
-    Display detailed usage instructions for the DataSling application.
-    """
-    instructions = f"""
-{HEADING_COLOR}================================ INFO =================================={RESET_COLOR}
+    def display(self):
+        instructions = f"""
+{self.config.HEADING_COLOR}================================ INFO =================================={self.config.RESET_COLOR}
 
-{HEADING_COLOR}Overview:{RESET_COLOR}
-{CONTENT_COLOR}DataSling is a Python-based tool for processing SQL queries from .sql
+{self.config.HEADING_COLOR}Overview:{self.config.RESET_COLOR}
+{self.config.CONTENT_COLOR}DataSling is a Python-based tool for processing SQL queries from .sql
 files, executing them against predefined data sources,
 and managing the results as pandas DataFrames in an
-interactive shell.{RESET_COLOR}
+interactive shell.{self.config.RESET_COLOR}
 
-{HEADING_COLOR}Quickstart/ Step I{RESET_COLOR}
-{CONTENT_COLOR}Define your database presets in a ~/.rgwfuncsrc
+{self.config.HEADING_COLOR}Quickstart/ Step I{self.config.RESET_COLOR}
+{self.config.CONTENT_COLOR}Define your database presets in a ~/.rgwfuncsrc
 file. See the rgwfuncs documentation
 (https://pypi.org/project/rgwfuncs/) for more info about
 available database types.
@@ -38,10 +37,10 @@ available database types.
           "password": "YOUR_PASSWORD",
           "database": "YOUR_DATABASE"
         }}
-    }}{RESET_COLOR}
+    }}{self.config.RESET_COLOR}
 
-{HEADING_COLOR}Quickstart/ Step II{RESET_COLOR}
-{CONTENT_COLOR}Create one or more .sql files containing your SQL
+{self.config.HEADING_COLOR}Quickstart/ Step II{self.config.RESET_COLOR}
+{self.config.CONTENT_COLOR}Create one or more .sql files containing your SQL
 queries in the below format, using 'df_name@preset::preset_name'
 directive to define DataFrame name and preset.
 
@@ -53,8 +52,8 @@ directive to define DataFrame name and preset.
     df2@preset::snowflake
     SELECT * FROM table2 WHERE date > '2023-01-01'
 
-{HEADING_COLOR}Quickstart/ Step III{RESET_COLOR}
-{CONTENT_COLOR}Invoke datasling with optional file/directory arguments and flags:
+{self.config.HEADING_COLOR}Quickstart/ Step III{self.config.RESET_COLOR}
+{self.config.CONTENT_COLOR}Invoke datasling with optional file/directory arguments and flags:
     datasling [--historic] [<sql_file_or_directory>...]
 
     Examples:
@@ -67,8 +66,8 @@ directive to define DataFrame name and preset.
     datasling --historic q.sql    # Use most recent historic data for
                                   # specified file
 
-{HEADING_COLOR}Explore Utilities{RESET_COLOR}
-{CONTENT_COLOR}The following utilities are available in the interactive shell:
+{self.config.HEADING_COLOR}Explore Utilities{self.config.RESET_COLOR}
+{self.config.CONTENT_COLOR}The following utilities are available in the interactive shell:
 
 - open(df_name): Open DataFrame in LibreOffice Calc
 - history(n): Show last n query history entries. Defaults to 10.
@@ -79,8 +78,8 @@ directive to define DataFrame name and preset.
   DataFrames from history
 - info(): Show this documentation
 
-{HEADING_COLOR}Tips{RESET_COLOR}
-{CONTENT_COLOR}- Only files with .sql extension will be processed
+{self.config.HEADING_COLOR}Tips{self.config.RESET_COLOR}
+{self.config.CONTENT_COLOR}- Only files with .sql extension will be processed
 - If no arguments are provided, all .sql files in the current
   directory are processed
 - DataFrame names must be unique across all processed files
@@ -92,6 +91,6 @@ directive to define DataFrame name and preset.
 - Use comments (--) to organize your SQL files
 - Check history() for past query results
 - Use open() to explore large DataFrames externally
-- History is limited to last 40 entries (older entries auto-deleted){RESET_COLOR}
+- History is limited to last 40 entries (older entries auto-deleted){self.config.RESET_COLOR}
 """
-    print(instructions)
+        print(instructions)
