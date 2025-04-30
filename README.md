@@ -1,27 +1,25 @@
-# DataSling
+# DATASLING
 
-DataSling is a tool for processing SQL queries from .sql files, executing them against predefined data sources, and managing the results as pandas DataFrames in an interactive shell.
+datasling is a tool for processing SQL queries from .sql files, executing them against predefined data sources, and managing the results as pandas DataFrames in an interactive shell.
 
-## 1. Installation / Upgrade to Latest Version
+## 1. Installation
 
-To install or upgrade to the latest version, run:
+To install, add the APT repository and install the package using the following command:
 
     bash -c "sh <(curl -fsSL https://files.ryangerardwilson.com/datasling/install.sh)"
 
-## 2. Subsequent Updates
-
-To update your installation:
+After installation, the `datasling` command is available system-wide.
+ 
+## 2. Get Latest Version
 
     sudo apt update
     sudo apt install --only-upgrade datasling
 
 ## 3. Usage
 
-DataSling allows you to process one or more .sql files (only files with the .sql extension will be processed). If no file or directory arguments are provided, DataSling processes all .sql files in the current directory.
+datasling allows you to process one or more .sql files (only files with the .sql extension will be processed). If no file or directory arguments are provided, DataSling processes all .sql files in the current directory.
 
-### 3.1 Quickstart
-
-#### 3.1.1. Step 1 – Define Your Database Presets
+### 3.1. Step 1 – Define Your Database Presets
 
 Create (or update) your ~/.rgwfuncsrc file with the required database presets. (For more details, check out the [rgwfuncs documentation](https://pypi.org/project/rgwfuncs/).) For example:
 
@@ -46,7 +44,7 @@ Create (or update) your ~/.rgwfuncsrc file with the required database presets. (
       ]
     }
 
-#### 3.1.2. Step 2 – Create Your SQL Files
+### 3.2. Step 2 – Create Your SQL Files
 
 Write one or more .sql files containing your SQL queries. Use the `df_name@preset::preset_name` directive to define the DataFrame name and specify which preset to use. Comments (/* ... */ or -- style) are ignored during execution. For example:
 
@@ -62,9 +60,9 @@ Note:
 - DataFrame names must be unique across all processed files.  
 - If duplicate names are detected, execution will be halted (unless running in historic mode).
 
-#### 3.1.3. Step 3 – Run DataSling
+### 3.3. Step 3 – Run datasling
 
-Invoke DataSling from the command line with optional file/directory arguments and flags:
+Invoke datasling from the command line with optional file/directory arguments and flags:
 
     datasling [--historic] [<sql_file_or_directory>...]
 
@@ -83,9 +81,9 @@ Examples:
     datasling --historic
     datasling --historic q.sql
 
-### 3.2 Utilities in the Interactive Shell
+### 3.4 Utilities in the Interactive Shell
 
-After running your queries, DataSling opens an interactive shell where you can use these utilities:
+After running your queries, datasling opens an interactive shell where you can use these utilities:
 
     # Open the specified DataFrame in LibreOffice Calc.
     open(df_name)
@@ -105,10 +103,10 @@ After running your queries, DataSling opens an interactive shell where you can u
     # Display detailed instructions and documentation.
     info()
 
-### 3.3 Tips
+## 4. Tips
 
 • Only files with the .sql extension will be processed.  
-• If no arguments are provided, DataSling processes all .sql files in the current directory.  
+• If no arguments are provided, datasling processes all .sql files in the current directory.  
 • Use the --historic flag to load the most recent saved version of DataFrames instead of re-executing the queries.  
 • DataFrame names must be unique across all processed files. Conflicts will prevent execution (though they are ignored in historic mode).  
 • Use comments (/* ... */ or --) to organize your SQL files.  
@@ -117,7 +115,7 @@ After running your queries, DataSling opens an interactive shell where you can u
 • Use open() to explore large DataFrames externally.  
 • Query history is limited to the last 40 entries (older entries are auto-deleted).
 
-## 4. License
+## 5. License
 
 This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.
 
