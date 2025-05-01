@@ -11,7 +11,7 @@ To install `datasling`, use pip:
 
     pip install datasling
 
-This installs `datasling` and its dependencies (`colorama`, `pandas`, `rgwfuncs`). Ensure you have Python 3.10 or higher.
+This installs `datasling` and its dependencies.
 
 **Note**: `datasling` relies on database presets defined in `~/.rgwfuncsrc` via the `rgwfuncs` package. See [Step 1 – Define Your Database Presets](#31-step-1--define-your-database-presets) to set this up.
 
