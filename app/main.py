@@ -84,6 +84,10 @@ class DataSlingApp:
         self.global_namespace['historic'] = lambda df_names=None: self.history_manager.historic(df_names, self.global_namespace)
         self.global_namespace['ORIGINAL_FILEPATHS'] = filepaths
 
-if __name__ == "__main__":
+# Main function needed for effective PyPI Packaging
+def main():
     app = DataSlingApp()
     app.run(sys.argv[1:])
+
+if __name__ == "__main__":
+    main()

@@ -2,18 +2,24 @@
 
 datasling is a tool for processing SQL queries from .sql files, executing them against predefined data sources, and managing the results as pandas DataFrames in an interactive shell.
 
+- **Author**: Ryan Gerard Wilson
+- **Website**: ryangerardwilson.com
+
 ## 1. Installation
 
-To install, add the APT repository and install the package using the following command:
+To install `datasling`, use pip:
 
-    bash -c "sh <(curl -fsSL https://files.ryangerardwilson.com/datasling/install.sh)"
+    pip install datasling
 
-After installation, the `datasling` command is available system-wide.
- 
+This installs `datasling` and its dependencies (`colorama`, `pandas`, `rgwfuncs`). Ensure you have Python 3.10 or higher.
+
+**Note**: `datasling` relies on database presets defined in `~/.rgwfuncsrc` via the `rgwfuncs` package. See [Step 1 – Define Your Database Presets](#31-step-1--define-your-database-presets) to set this up.
+
 ## 2. Get Latest Version
 
-    sudo apt update
-    sudo apt install --only-upgrade datasling
+To upgrade to the latest version of `datasling`:
+
+    pip install --upgrade datasling
 
 ## 3. Usage
 

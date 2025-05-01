@@ -1,10 +1,17 @@
-*.log
+# Python cache & bytecode
+**/__pycache__/
+*.py[cod]
+
+# Build/artifacts
+build/
+dist/
+*.egg-info/
+
+# Editor/temp files
 *.swp
-*.sql
-app/q
-app/q2
-**/__pycache__
-app/q
-debian/version_build_folders/*
-debian/version_debs/*
-debian/dists/*
+*.env.local
+*.tmp
+
+# Generated PDFs
+*.pdf
+
