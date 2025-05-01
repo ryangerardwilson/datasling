@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "datasling"
-version = "0.0.9"
-description = "Convert Markdown (.md) files to PDF ..."
+version = "0.0.10"
+description = "A tool for browsing and manipulating CSV files"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT License" }
