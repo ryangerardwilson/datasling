@@ -1,14 +1,14 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel", "fastentrypoints"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "datasling"
-version = "0.0.10"
+version = "0.0.22"
 description = "A tool for browsing and manipulating CSV files"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT License" }
+license = "MIT"
 
 authors = [
   { name = "Ryan Gerard Wilson", email = "ryan@wilsonfamilyoffice.com" }
@@ -30,4 +30,4 @@ Homepage = "https://ryangerardwilson.com"
 Issues   = "https://ryangerardwilson.com/contact"
 
 [project.entry-points."console_scripts"]
-datasling = "main:main"
+datasling = "datasling.app.main:main"
