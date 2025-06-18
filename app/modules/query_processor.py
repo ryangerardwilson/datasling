@@ -18,7 +18,7 @@ class QueryProcessor:
         try:
             with self.lock:  # Synchronize access to dictionaries
                 start_time_dict[df_name] = time.time()
-            df = load_data_from_query(preset, query)
+            df = load_data_from_query(query, preset=preset)
             with self.lock:  # Synchronize access to dictionaries
                 result_dict[df_name] = df
                 end_time_dict[df_name] = time.time()
